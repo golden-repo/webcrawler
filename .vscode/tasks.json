@@ -1,0 +1,31 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558 
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build-e2f",
+            "type": "npm",
+            "script": "build-e2f",
+            "problemMatcher": []
+        },
+        {
+            "label": "build-mpt",
+            "type": "npm",
+            "script": "build-mpt",
+            "problemMatcher": []
+        },
+        {
+            "label": "build-doshi",
+            "type": "npm",
+            "script": "build-doshi",
+            "problemMatcher": []
+        },
+        {
+            "label": "build-goibibo",
+            "type": "npm",
+            "script": "build-goibibo",
+            "problemMatcher": []
+        }
+    ]
+}

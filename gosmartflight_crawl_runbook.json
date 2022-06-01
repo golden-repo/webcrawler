@@ -1,0 +1,93 @@
+{
+	"config": {
+		"path": "https://goflysmartapi.azurewebsites.net/api",
+		"module_prefix": "cx",
+		"task_prefix": "tx"
+	},
+	"pages": [
+		{
+			"id": 1,
+			"name": "index",
+			"actions": [
+				{
+					"name": "index",
+					"codefile": "./cx_gosmart_runbook.js",
+					"properties": [],
+					"tasks": [
+						{
+							"id": 1,
+							"name": "call_login_api",
+							"parameters": [
+								{"id": 1, "name": "url", "value": "https://goflysmartapi.azurewebsites.net/api/login", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "method", "value": "post", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "data", "value": {"email":"9382207002", "password":"Sumit@12356"}, "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "content_type", "value": "application/json", "sourcetype": "value", "direction": "input"},
+								{"id": 5, "name": "user", "value": "${data.user}", "sourcetype": "variable", "direction": "output"},
+								{"id": 6, "name": "access_token", "value": "${data.access_token}", "sourcetype": "variable", "direction": "output"},
+								{"id": 7, "name": "token_type", "value": "${data.token_type}", "sourcetype": "variable", "direction": "output"},
+								{"id": 8, "name": "expires_in", "value": "${data.expires_in}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 2},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 100}
+							]
+						},
+						{
+							"id": 2,
+							"name": "get_hot_deal",
+							"parameters": [
+								{"id": 1, "name": "url", "value": "https://goflysmartapi.azurewebsites.net/api/hot-deals", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "method", "value": "get", "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "content_type", "value": "application/json", "sourcetype": "value", "direction": "input"},
+								{"id": 5, "name": "token", "value": "${access_token}", "sourcetype": "variable", "direction": "input"},
+								{"id": 6, "name": "deals", "value": "${data}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 3},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 100}
+							]
+						},
+						{
+							"id": 3,
+							"name": "get_deal_stock_dates",
+							"parameters": [
+								{"id": 1, "name": "url", "value": "https://goflysmartapi.azurewebsites.net/api/get-stock?origin_id=${origin_id}&destination_id=${destination_id}", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "method", "value": "get", "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "content_type", "value": "application/json", "sourcetype": "value", "direction": "input"},
+								{"id": 5, "name": "token", "value": "${token}", "sourcetype": "variable", "direction": "input"},
+								{"id": 5, "name": "deals", "value": "${deals}", "sourcetype": "variable", "direction": "input"},
+								{"id": 6, "name": "deals", "value": "${deals}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 4},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 100}
+							]
+						},
+						{
+							"id": 4,
+							"name": "get_tickets",
+							"parameters": [
+								{"id": 1, "name": "url", "value": "https://goflysmartapi.azurewebsites.net/api/search?dpt=${dpt}&destination=${destination}&origin=${origin}&adults=1&children=0&destination_id=${destination_id}&origin_id=${origin_id}&child=0", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "method", "value": "get", "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "content_type", "value": "application/json", "sourcetype": "value", "direction": "input"},
+								{"id": 5, "name": "token", "value": "${token}", "sourcetype": "variable", "direction": "input"},
+								{"id": 5, "name": "deals", "value": "${deals}", "sourcetype": "variable", "direction": "input"},
+								{"id": 6, "name": "tickets", "value": "${tickets}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 100},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 100}
+							]
+						},
+						{
+							"id": 100,
+							"name": "end",
+							"parameters": [],
+							"connects": []
+						}
+					]
+				}
+			]
+		}
+	]
+}

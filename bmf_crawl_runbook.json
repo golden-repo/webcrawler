@@ -1,0 +1,251 @@
+{
+	"config": {
+		"path": "/",
+		"module_prefix": "cx",
+		"task_prefix": "tx"
+	},
+	"pages": [
+		{
+			"id": 1,
+			"name": "index",
+			"actions": [
+				{
+					"name": "index",
+					"codefile": "./cx_bmf_runbook.js",
+					"properties": [],
+					"tasks": [
+						{
+							"id": 1,
+							"name": "click_button",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "div.pull-right > div > a:nth-child(3)", "sourcetype": "value", "direction": "input"},
+								{"id": 1, "name": "timeout", "value": "1500", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 2},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 100}
+							]
+						},
+						{
+							"id": 2,
+							"name": "read_action_controls",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#ctl00_mainbody_pnlCity > a", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "content_type", "value": "html", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "controls", "value": "${controls}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 3},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 100}
+							]
+						},
+						{
+							"id": 3,
+							"name": "set_value",
+							"parameters": [
+								{"id": 1, "name": "controls", "value": "${controls}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "controls_size", "value": "${controls_size}", "sourcetype": "variable", "direction": "output"},
+								{"id": 3, "name": "index", "value": "0", "sourcetype": "value", "direction": "input"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 4},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 100}
+							]
+						},
+						{
+							"id": 4,
+							"name": "element_click",
+							"parameters": [
+								{"id": 1, "name": "controls", "value": "${controls}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "index", "value": "${index}", "sourcetype": "variable", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 5},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 100}
+							]
+						},
+						{
+							"id": 5,
+							"name": "read_action_controls",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#ctl00_mainbody_Panel1 > div:nth-child(2) > a", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "content_type", "value": "html", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "subcontrols", "value": "${subcontrols}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 100},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 100}
+							]
+						},						
+						{
+							"id": 51,
+							"name": "set_user_input",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#email", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "value", "value": "radharaniholidays@gmail.com", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${status} === true", "taskid": 2},
+								{"id": 2, "name": "connect2", "expression": "${status} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 52,
+							"name": "set_user_input",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#password", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "value", "value": "Sumit@12356", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 3},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 53,
+							"name": "click_button",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "body > div > div > div > form > div > div > div:nth-child(5) > button", "sourcetype": "value", "direction": "input"},
+								{"id": 1, "name": "timeout", "value": "1500", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 4},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 54,
+							"name": "element_present",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#DataTables_Table_0", "sourcetype": "value", "direction": "input"},
+								{"id": 1, "name": "timeout", "value": "1500", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 10},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 60,
+							"name": "read_global_variable",
+							"parameters": [
+								{"id": 1, "name": "varname", "value": "jhyui", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "token", "value": "${token}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 14},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 64,
+							"name": "call_api",
+							"parameters": [
+								{"id": 1, "name": "url", "value": "https://www.cheapfixdeparture.com/api/flights", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "method", "value": "get", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "token", "value": "${token}", "sourcetype": "variable", "direction": "input"},
+								{"id": 4, "name": "content_type", "value": "json", "sourcetype": "value", "direction": "input"},
+								{"id": 5, "name": "tickets", "value": "${tickets}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 16},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 66,
+							"name": "transform_ticket_data",
+							"parameters": [
+								{"id": 1, "name": "tickets", "value": "${tickets}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "tickets", "value": "${tickets}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 50},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 70,
+							"name": "read_content",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#Select_Sector", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "content_type", "value": "html", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 30},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 80,
+							"name": "parse_content",
+							"parameters": [
+								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "content_type", "value": "html", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 40},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 90,
+							"name": "read_ticket_data",
+							"parameters": [
+								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "selector", "value": "#Select_Sector", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "content_selector", "value": ".datatable>tbody", "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "page_size_selector", "value": "select.input-sm.form-control", "sourcetype": "value", "direction": "input"},
+								{"id": 5, "name": "page_size_value", "value": "100", "sourcetype": "value", "direction": "input"},
+								{"id": 6, "name": "timeout", "value": "30000", "sourcetype": "value", "direction": "input"},
+								{"id": 7, "name": "delay", "value": "1000", "sourcetype": "value", "direction": "input"},
+								{"id": 8, "name": "tickets", "value": "", "sourcetype": "value", "direction": "output"},
+								{"id": 9, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 50},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 91,
+							"name": "save2db",
+							"parameters": [
+								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "tickets", "value": "${tickets}", "sourcetype": "variable", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"},
+								{"id": 4, "name": "updated_tickets", "value": "${updated_tickets}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 19},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 92,
+							"name": "close",
+							"parameters": [],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "true", "taskid": 100}
+							]
+						},
+						{
+							"id": 100,
+							"name": "end",
+							"parameters": [],
+							"connects": []
+						}
+					]
+				}
+			]
+		}
+	]
+}

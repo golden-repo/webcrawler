@@ -1,0 +1,115 @@
+{
+	"config": {
+		"path": "/",
+		"module_prefix": "cx",
+		"task_prefix": "tx"
+	},
+	"pages": [
+		{
+			"id": 1,
+			"name": "index",
+			"actions": [
+				{
+					"name": "index",
+					"codefile": "./cx_tudan_runbook.js",
+					"properties": [],
+					"tasks": [
+						{
+							"id": 1,
+							"name": "set_user_input",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#txtuserid", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "value", "value": "9800412356", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${status} === true", "taskid": 2},
+								{"id": 2, "name": "connect2", "expression": "${status} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 2,
+							"name": "set_user_input",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#txtpassword", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "value", "value": "Sumit@12356", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 3},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 3,
+							"name": "click_button",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#btnlogin", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 4},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 4,
+							"name": "read_content",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "a.bb", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "content_type", "value": "html", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "content_selector", "value": "table.table,.table-bordered,.table-striped", "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "contents", "value": "${contents}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 5},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 5,
+							"name": "parse_content",
+							"parameters": [
+								{"id": 1, "name": "contents", "value": "${contents}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "content_type", "value": "html", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "contents", "value": "${contents}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 7},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 7,
+							"name": "save2db",
+							"parameters": [
+								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "tickets", "value": "${tickets}", "sourcetype": "variable", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"},
+								{"id": 4, "name": "updated_tickets", "value": "${tickets}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 19},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 19,
+							"name": "close",
+							"parameters": [],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "true", "taskid": 20}
+							]
+						},
+						{
+							"id": 20,
+							"name": "end",
+							"parameters": [],
+							"connects": []
+						}
+					]
+				}
+			]
+		}
+	]
+}

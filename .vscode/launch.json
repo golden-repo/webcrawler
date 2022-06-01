@@ -1,0 +1,148 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch mair Program",
+            "program": "${workspaceFolder}/src/mair/indexmair.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch moh Program",
+            "program": "${workspaceFolder}/src/moh/indexmoh.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch airiq Program",
+            "program": "${workspaceFolder}/indexairiq.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Program E2F",
+            "preLaunchTask": "build-e2f",
+            "outFiles": ["${workspaceFolder}/dist/e2f/e2fcrwler.js"],
+            "program": "${workspaceFolder}/dist/e2f/indexe2f.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Program MPT",
+            "preLaunchTask": "build-mpt",
+            "outFiles": ["${workspaceFolder}/dist/mpt/mptcrwler.js"],
+            "program": "${workspaceFolder}/dist/mpt/indexmpt.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Program Doshi",
+            "preLaunchTask": "build-doshi",
+            "outFiles": ["${workspaceFolder}/dist/doshi/doshicrwler.js"],
+            "program": "${workspaceFolder}/dist/doshi/indexdoshi.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Program GOIBIBO",
+            "preLaunchTask": "build-goibibo",
+            "outFiles": ["${workspaceFolder}/dist/goibibo/goibibocrwler.js"],
+            "program": "${workspaceFolder}/dist/goibibo/indexgoibibo.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch TMZ Program",
+            "program": "${workspaceFolder}/indextmz.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch INDR Program",
+            "program": "${workspaceFolder}/indexindr.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch CHEAF Program",
+            "program": "${workspaceFolder}/indexcheap.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch TUDAN Program",
+            "program": "${workspaceFolder}/src/tudan/indextudan.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch GSHEET Program",
+            "program": "${workspaceFolder}/src/gsheet/indexgsheet.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch SNG Program",
+            "program": "${workspaceFolder}/indexsng.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch RTT Program",
+            "program": "${workspaceFolder}/indexrtt.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch TGTT Program",
+            "program": "${workspaceFolder}/indextgtt.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Email Processor",
+            "program": "${workspaceFolder}/indexmail.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch BMF Program",
+            "program": "${workspaceFolder}/indexbmfv2.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch JD Program",
+            "program": "${workspaceFolder}/indexjd.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch DS Program",
+            "program": "${workspaceFolder}/indexds.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Flight Status Finder Program",
+            "program": "${workspaceFolder}/indexflightstats.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch GoSmart Program",
+            "program": "${workspaceFolder}/indexgoflysmart_api.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Get Flight Stat",
+            "program": "${workspaceFolder}/indexairiq_api.js"
+        }
+   ]
+}
