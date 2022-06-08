@@ -115,7 +115,7 @@ export class E2FCrawler {
 
                         ticket_type: 'Economy',
                         availability: dataItem.seat,
-                        price: (dataItem.fare+dataItem.srv_tax+dataItem.gst) + 200, //added to keep the difference between api booking and request booking
+                        price: (dataItem.fare+dataItem.srv_tax+dataItem.gst), //added to keep the difference between api booking and request booking
                         flight_id: 1,
                         runid: '',
                         recid: dataItem.id
