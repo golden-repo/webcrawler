@@ -243,7 +243,7 @@ function prepareFlightStatData(data, payload) {
             "epoch_date": Date.parse(`${arrvDate} ${flightData.arrival_time}:00.000`)
         }
 
-        ticket.availability = (parseInt(payload.adult) + parseInt(payload.child));
+        ticket.availability = flightData.seats_available ? parseInt(flightData.seats_available) : (parseInt(payload.adult) + parseInt(payload.child));
         ticket.price = parseFloat(flightData.adult) + 50.0; //default API price charge
         ticket.recid = flightData.id;
 
