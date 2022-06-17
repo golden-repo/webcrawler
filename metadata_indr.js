@@ -375,6 +375,82 @@ function finalizeData(runid, datasourceUrl) {
 }
 
 function circleCrawlingFinished(runid, store, circleKey, callback) {
+    return new Promise(async (resolve, reject) => {
+        const datastore = require('./radharani/indrdatastore');
+
+        try
+        {
+            //console.log('circleCrawlingFinished called');
+            // if(circleKey===null || circleKey===undefined || circleKey==="") return -1;
+            // if(store[circleKey]===null || store[circleKey]===undefined || !(store[circleKey] instanceof Array)) return -1;
+            if(store['attributes']!==undefined) {
+                delete store['attributes'];
+            }
+    
+            let key_count = Object.keys(store).length;
+            //console.log('going to call saveCircleBatchData');
+            if(Object.keys(store).length>0) {
+                //Object.keys(store).forEach(async key => {
+                for (let index = 0; index < Object.keys(store).length; index++) {
+                    const key = Object.keys(store)[index];
+                    try
+                    {
+                        circleKey = key;
+        
+                        let targetRunId = runid;
+                        let circleData = await datastore.saveCircleBatchData(runid, store[circleKey], circleKey);
+                        try
+                        {
+                            if(targetRunId!==null && targetRunId!==undefined && circleData.length>0) {
+                                let deptId = circleData[0].departure.id;
+                                let arrvId = circleData[0].arrival.id;
+                                let records = circleData.length;
+                                //let cdata = circleData;
+                                //updatedRecs = store[circleKey];
+                                let status = await datastore.updateExhaustedCircleInventory(runid, deptId, arrvId);
+                                if(status!==null && status!==undefined) {
+                                    let msg = `Clear exhausted inventory [${circleData[0].departure.circle}-${circleData[0].arrival.circle} -> ${records}] ${status.affectedRows} - ${status.message})`;
+                                    console.log(msg);
+                                    --key_count;
+
+                                    if(key_count===0) {
+                                        resolve('All circle processed');
+                                    }
+                                    // if(callback) {
+                                    //     callback(msg);
+                                    // }
+                                }
+                            }
+                        }
+                        catch(eex1) {
+                            console.log(`Error in circleCrawlingFinished:saveCircleBatchData : ${eex1}`);
+                            return reject(eex1);
+                        }
+                    }
+                    catch(ex1) {
+                        console.log(`Error in circleCrawlingFinished:forEach : ${ex1}`);
+                        return reject(ex1);
+                        // console.log(ex1);
+                    }
+                };
+
+                //datastore.dispose();
+            }
+            else {
+                let msg = 'No data available to update';
+                console.log(msg);
+                resolve(msg);
+            }
+        }
+        catch(e3) {
+            console.log(e3);
+            return reject(e3);
+        }
+    });
+}
+
+/*
+function circleCrawlingFinished(runid, store, circleKey, callback) {
     return new Promise((resolve, reject) => {
         const datastore = require('./radharani/indrdatastore');
 
@@ -446,6 +522,7 @@ function circleCrawlingFinished(runid, store, circleKey, callback) {
         }
     });
 }
+*/
 
 module.exports = {
     circlecrawlfinished: circleCrawlingFinished,

@@ -499,14 +499,17 @@ async function ProcessActivity(targetUri, runid=uuid5()) {
                         //log('moving to next circle');
                         log(`${key} crawl process finished. Now saving circle data into table.`);
                         const store = getStore();
-                        if(store && store.attributes && store.attributes.length>0) {
-                            let statusinfo = await metadata.circlecrawlfinished(runid, getStore(), key, function(status) {
-                                log(`Finaliation of ${key} - ${status}`);
-                            });
-                            //log(`Next operation ${i} starting`);
+                        let status = await metadata.circlecrawlfinished(runid, store, key);
+                        log(`Finaliation of ${key} - ${status}`);
 
-                            log(`Final Status :: ${statusinfo}`);
-                        }
+                        // if(store && store.attributes && store.attributes.length>0) {
+                        //     let statusinfo = await metadata.circlecrawlfinished(runid, getStore(), key, function(status) {
+                        //         log(`Finaliation of ${key} - ${status}`);
+                        //     });
+                        //     //log(`Next operation ${i} starting`);
+
+                        //     log(`Final Status :: ${statusinfo}`);
+                        // }
                     }
                 }
             }
