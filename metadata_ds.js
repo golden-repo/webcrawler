@@ -103,7 +103,7 @@ function contentParser(content, store, runid, option) {
                     break;
                 case 12:
                     //this is rate
-                    if(data.match(price_pattern).length>0)
+                    if(data.match(price_pattern) && data.match(price_pattern).length>0)
                         data = data.match(price_pattern)[0].trim();
 
                     rate = parseFloat(data.replace(',', '').trim());
@@ -120,7 +120,7 @@ function contentParser(content, store, runid, option) {
                     if(is_qty_present) {
                         let arr = end_time.split(' ');
                         qty = parseInt(arr[arr.length-1]);
-                        end_time = end_time.substr(1,end_time.lastIndexOf(' ')).trim();
+                        end_time = end_time.substr(0,end_time.lastIndexOf(' ')).trim();
                     }
                     break;
                 case 6:
@@ -142,8 +142,20 @@ function contentParser(content, store, runid, option) {
         }
         deal.flight_number = flight_number;
         deal.ticket_type = 'Economy';
-        deal.departure = {'circle': option.source, 'date': disp_date, 'time': start_time, 'epoch_date': Date.parse(`${disp_date} ${start_time}`)};
-        deal.arrival = {'circle': option.destination, 'date': disp_date, 'time': end_time, 'epoch_date': Date.parse(`${disp_date} ${end_time}`)};
+
+        var start_date = Date.parse(`${disp_date} ${start_time}`);
+        var end_date = Date.parse(`${disp_date} ${end_time}`);
+        var end_date_part = disp_date;
+
+        if(end_date < start_date) {
+            //end_date.setDate(end_date.getDate() + 1);
+            var dt = new Date(end_date);
+            end_date = dt.setDate(dt.getDate() + 1);
+            end_date_part = moment(end_date).format('MM-DD-YYYY');
+        }
+
+        deal.departure = {'circle': option.source, 'date': disp_date, 'time': start_time, 'epoch_date': start_date};
+        deal.arrival = {'circle': option.destination, 'date': end_date_part, 'time': end_time, 'epoch_date': end_date};
         // deal.departure = {'circle': option.source, 'date': disp_date, 'time': start_time, 'epoch_date': Date.parse(`${start_time}`)};
         // deal.arrival = {'circle': option.destination, 'date': disp_date, 'time': end_time, 'epoch_date': Date.parse(`${end_time}`)};
         deal.availability = qty;

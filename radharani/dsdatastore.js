@@ -5,7 +5,7 @@ const mysql = require('mysql');
 const moment = require('moment');
 
 const logger = require('../src/common/logger').Logger;
-logger.init('ds');
+//logger.init('ds');
 
 const DEFAULT_COMPANY_ID = 1;
 const DEFAULT_USER_ID = 104;
