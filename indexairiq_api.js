@@ -11,7 +11,9 @@ const metadata = require('./metadata_airiq');
 const delay = require('delay');
 const moment = require('moment');
 const fetch = require('isomorphic-fetch');
-const commonlib = require('./gofirstpnrcrawl');
+const goFirstCommonLib = require('./gofirstpnrcrawl');
+const airasiaCommonLib = require('./airasiapnrcrawl');
+
 // const winston = require('winston');
 // const {combine, timestamp, label, printf} = winston.format;
 // const DailyRotateFile = require('winston-daily-rotate-file');
@@ -263,7 +265,7 @@ router.get('/gofirst/:pnr/:email', async function(req, res, next) {
       let runid = `${uuidv4()}_${moment().format("DD-MMM-YYYY HH:mm:ss.SSS")}`;
       //let crawlingUri = "https://www.flygofirst.com/";
       let crawlingUri = `https://book.flygofirst.com/Booking/Retrieve?rl=${req.params.pnr}&ln=${req.params.email}`;
-      commonlib.ProcessActivityV2(crawlingUri, {'pnr': req.params.pnr, 'email': req.params.email}, runid).then((data)=> {
+      goFirstCommonLib.ProcessActivityV2(crawlingUri, {'pnr': req.params.pnr, 'email': req.params.email}, runid).then((data)=> {
           try
           {
               log('Process completed.');
@@ -295,6 +297,26 @@ router.get('/gofirst/:pnr/:email', async function(req, res, next) {
       log(e);
       excutionStarted = false;
       next(e);
+  }
+});
+
+router.get('/airasia/:pnr/:email', async function(req, res, next) {
+  try {
+    var data = {};
+    var payload = req.body;
+    var pnr = req.params.pnr;
+    var addldata = req.params.email;
+
+    logger.log('info', `Request for Email: ${req.params.email} and PNR: ${req.params.pnr}`);
+
+    if(pnr && addldata) {
+      data = await airasiaCommonLib.searchPNR(pnr, addldata);
+    }
+
+    res.status(200).json(data);
+  } catch (err) {
+    console.error(`Error while getting programming languages `, err.message);
+    next(err);
   }
 });
 
