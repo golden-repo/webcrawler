@@ -925,6 +925,11 @@ async function performUserOperation(objPage, userInput, data, ndx, runid, option
                             }
                         }
                         //log("Input Control not Array", `click ${userInput.selector} done`);
+
+                        if(userInput.delayafter>-1) {
+                            delay = userInput.delayafter;
+                            await page.waitFor(delay).catch(reason => log(`E12 => ${reason}`)); //400
+                        }
                     }
                     else {
                         //inputControl.forEach((ctrl, idx) => {

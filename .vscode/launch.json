@@ -143,6 +143,12 @@
             "request": "launch",
             "name": "Get Flight Stat",
             "program": "${workspaceFolder}/indexairiq_api.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Crawl Airtb portal",
+            "program": "${workspaceFolder}/indexcrawl_api.js"
         }
    ]
 }

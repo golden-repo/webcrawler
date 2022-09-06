@@ -532,6 +532,20 @@ module.exports = {
                             id: 100,
                             controlid: '',
                             delaybefore: 100,
+                            selector: `#ctl00_mainbody_Panel1 > a:nth-of-type(n+{i})`,
+                            isarray: false,
+                            checkcontent: '',
+                            type: '',
+                            value: ``,
+                            action: 'click',
+                            checkselector: '#ctl00_mainbody_GV_Report1 > tbody',
+                            delayafter: 5000,
+                            next: 1
+                        },                        
+                        {
+                            id: 1,
+                            controlid: '',
+                            delaybefore: 500,
                             selector: '#ctl00_mainbody_UpdatePanel2 > div.col-md-12 > div.col-lg-8.col-md-8.col-sm-12.col-xs-12 > div.col-md-3.col-sm-6.col-xs-6',
                             checkcontent: '',
                             type: '',
@@ -545,10 +559,10 @@ module.exports = {
                                 }
                                 return true;
                             },
-                            next: 1
+                            next: 2
                         },                        
                         {
-                            id: 1,
+                            id: 2,
                             controlid: '',
                             delaybefore: 100,
                             selector: '#ctl00_mainbody_DD_no_days',
@@ -558,20 +572,6 @@ module.exports = {
                             action: 'keyed',
                             delayafter: 200,
                             checkselector: '',
-                            next: 2
-                        },                        
-                        {
-                            id: 2,
-                            controlid: '',
-                            delaybefore: 100,
-                            selector: `#ctl00_mainbody_Panel1 > a:nth-of-type(n+{i})`,
-                            isarray: false,
-                            checkcontent: '',
-                            type: '',
-                            value: ``,
-                            action: 'click',
-                            checkselector: '#ctl00_mainbody_GV_Report1 > tbody',
-                            delayafter: 100,
                             next: 3
                         },
                         {
@@ -589,7 +589,8 @@ module.exports = {
                             delayafter: 100,
                             checkselector: '',
                             next: 4
-                        },
+                        },                        
+
                         // {
                         //     id: 1,
                         //     controlid: '',
@@ -654,8 +655,8 @@ module.exports = {
                             value: '',
                             action: 'click',
                             haspostback: false,
-                            delayafter: 100,
-                            checkselector: '',
+                            delayafter: 5000,
+                            checkselector: '#ctl00_mainbody_GV_Report1 > tbody',
                             next: 5
                         },
                         {
@@ -668,7 +669,7 @@ module.exports = {
                             value: ``,
                             action: 'click',
                             delayafter: 200,
-                            checkselector: '',
+                            checkselector: '#ctl00_mainbody_GV_Report1 > tbody > tr:nth-child(n+2) > td:nth-child(8) >input:nth-child(7)',
                             tasks: [
                                 // {
                                 //     task_id: 1,
@@ -815,14 +816,25 @@ module.exports = {
                                 //         }
                                 //     ]
                                 // },
+                                // {
+                                //     task_id: 6,
+                                //     task_name: 'click content',
+                                //     selector: '#ctl00_mainbody_GV_Report1 > tbody',
+                                //     value: '',
+                                //     action: 'click',
+                                //     haspostback: false,
+                                //     checkselector: '#ctl00_mainbody_LnkResetSector',
+                                //     delayafter: 10000,
+                                // },                                
                                 {
-                                    task_id: 6,
+                                    task_id: 7,
                                     task_name: 'click content',
                                     selector: '#ctl00_mainbody_LnkResetSector',
                                     value: '',
                                     action: 'click',
                                     haspostback: false,
-                                    delayafter: 200,
+                                    checkselector: '#ctl00_mainbody_Panel1',
+                                    delayafter: 500,
                                 }        
                             ],
                             next: function(userInput) {
