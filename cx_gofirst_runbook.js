@@ -196,6 +196,48 @@ class CheapPortal_Crawl {
     }
 
     /*
+
+    */
+    async tx_read_content_append(taskinfo) {
+        var flag = true;
+        var content = '';
+        var element_loaded = true;
+
+        var prev_content = this.input_parameters.content;
+        var selector = this.input_parameters.selector;
+        var content_type = this.input_parameters.content_type;
+        if(!content_type) {
+            content_type = 'html';
+        }
+        await this.page.waitForSelector(selector).catch(reason => {
+            console.log(`E16 => ${reason}`);
+            element_loaded = false;
+        });
+
+        if(element_loaded) {
+            if(content_type === 'html') {
+                // Get inner HTML
+                content = await this.page.evaluate((sel) => document.querySelector(sel).innerHTML, selector).catch(reason => {
+                    console.log(`E18 => ${reason}`);
+                    flag = false;
+                });
+            } else {
+                // Get inner text
+                content = await this.page.evaluate((sel) => document.querySelector(sel).innerText, selector).catch(reason => {
+                    console.log(`E17 => ${reason}`);
+                    flag = false;
+                });
+            }
+        }
+
+        this.log('info', `Content => ${content}`);
+
+        this.output_parameters.content = `${prev_content}\n${content.trim()}`;
+
+        return content.trim()!=='';
+    }
+
+    /*
     --- Parse content via regex
     */
 
@@ -256,11 +298,15 @@ class CheapPortal_Crawl {
         if(content !== undefined && Array.isArray(content)) {
             data = Object.assign(data, {
                 "flightno": content[0],
-                "departure_time": moment(`${content[1]} ${content[5]}`, "DD MMM YYYY H:m").utcOffset('+5:30').format('YYYY-MM-DD H:m'),
-                "arrival_time": moment(`${content[1]} ${content[8]}`, "DD MMM YYYY H:m").utcOffset('+5:30').format('YYYY-MM-DD H:m'),
+                "departure_time": moment(`${content[1]} ${content[5]}`, "DD MMM YYYY H:m").utcOffset('+5:30').format('YYYY-MM-DD HH:mm'),
+                "arrival_time": moment(`${content[1]} ${content[8]}`, "DD MMM YYYY H:m").utcOffset('+5:30').format('YYYY-MM-DD HH:mm'),
                 "departure_city": content[4],
                 "arrival_city": content[7],
                 "duration": content[6],
+                "contact": {
+                    'phone': content[11].toLowerCase().replace('contact:', '').trim(),
+                    'email': content[12].toLowerCase().replace('emailid:', '').trim(),
+                }
             });
         }
 

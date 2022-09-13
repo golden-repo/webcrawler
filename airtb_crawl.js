@@ -78,6 +78,15 @@ var context_type = () => {
         if(item_val === null || item_val === undefined) {
             this._data.push({key, val});
         }
+        else {
+            if(this._data && Array.isArray(this._data)) {
+                this._data.forEach((item_key, item_val) => {
+                    if(item_key.key == key) {
+                        item_key.val = `${val}`;
+                    }
+                });
+            }            
+        }
 
         return this;
     }
@@ -445,7 +454,8 @@ async function ProcessActivityV2(targetUri, payload, runid=uuid5()) {
     
                     while(actionExecutorFinder !== null) {
                         // actionExecutor.execute();
-                        contextObj.setContextData('result', await actionExecutor.call(source, task_info));
+                        let result = await actionExecutor.call(source, task_info);
+                        contextObj.setContextData('result', result);
                         if(Array.isArray(contextObj.parameters)) {
                             contextObj.parameters = source.output_parameters;
                         }
@@ -477,7 +487,12 @@ async function ProcessActivityV2(targetUri, payload, runid=uuid5()) {
         log(`Retrying once again.${ex}`);
     }
 
-    return data;
+    if(data && Object.keys(data).length>0) {
+        return data;
+    }
+    else {
+        return null;
+    }
 }
 
 function transformData(textValue, providedData) {

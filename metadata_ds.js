@@ -101,18 +101,27 @@ function contentParser(content, store, runid, option) {
                         // option.destination = sectors[1].trim();
                     }
                     break;
-                case 12:
+                case 10:
                     //this is rate
                     if(data.match(price_pattern) && data.match(price_pattern).length>0)
                         data = data.match(price_pattern)[0].trim();
 
                     rate = parseFloat(data.replace(',', '').trim());
                     break;
-                case 8:
+                case 6:
                     //deal.flight = data.trim();
+                    // let timePart = data.trim();
+                    // let qtyPart = 0;
+                    // if(data.split(' ').length>1) {
+                    //     timePart = data.split(' ', 1)[0];
+                    //     qtyPart = data.split(' ', 1)[1];
+                    // }
+                    // else {
+
+                    // }
                     start_time = data.trim();
                     break;
-                case 10:
+                case 8:
                     //deal.flight = data.trim();
                     end_time = data.trim();
                     let is_qty_present = end_time.split(' ').length>2; //it should be more than 1 means 2 or more
@@ -123,10 +132,10 @@ function contentParser(content, store, runid, option) {
                         end_time = end_time.substr(0,end_time.lastIndexOf(' ')).trim();
                     }
                     break;
-                case 6:
+                case 4:
                     //this is flight number
                     //flight_number = 'SPL-000';
-                    flight_number = data.trim();
+                    flight_number = data.trim().replace(' ', '');
                     let flightParts = flight_number.split('-');
                     if(flightParts!==null && flightParts.length>0) {
                         deal.flight = flightParts[0].trim();
@@ -685,7 +694,7 @@ module.exports = {
                                     task_id: 2,
                                     task_name: 'read content',
                                     action: 'read',
-                                    selector: `#ctl00_mainbody_GV_Report1 > tbody > tr:nth-child(n+2) > td:nth-child(8) >input:nth-child(7)`,
+                                    selector: `#ctl00_mainbody_GV_Report1 > tbody > tr:nth-child(n+2) > td:nth-child(6) >input:nth-child(8)`,
                                     read_type: 'attributes',
                                     attributes: ['value'],
                                     plugins: [

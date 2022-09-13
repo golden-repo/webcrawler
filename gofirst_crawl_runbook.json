@@ -55,21 +55,49 @@
 						},
 						{
 							"id": 4,
-							"name": "parse_content_via_regex",
+							"name": "read_content_append",
 							"parameters": [
 								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
-								{"id": 2, "name": "content_type", "value": "text", "sourcetype": "value", "direction": "input"},
-								{"id": 3, "name": "regex", "value": "\\b[a-zA-Z0-9: ]+\\b", "sourcetype": "value", "direction": "input"},
-								{"id": 4, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "output"},
-								{"id": 5, "name": "pnrinfo", "value": "${dataLayer}", "sourcetype": "variable", "direction": "output"}
+								{"id": 2, "name": "selector", "value": "div.price-display-summary-line-item-pax", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "content_type", "value": "text", "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "output"}
 							],
 							"connects": [
 								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 5},
 								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
 							]
-						},
+						},						
 						{
 							"id": 5,
+							"name": "read_content_append",
+							"parameters": [
+								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "selector", "value": "div.passenger-contact-details-itin", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "content_type", "value": "text", "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 6},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},						
+						{
+							"id": 6,
+							"name": "parse_content_via_regex",
+							"parameters": [
+								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "content_type", "value": "text", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "regex", "value": "\\b[a-zA-Z0-9: @.]+\\b", "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "output"},
+								{"id": 5, "name": "pnrinfo", "value": "${dataLayer}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 7},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 7,
 							"name": "prepare_data",
 							"parameters": [
 								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},

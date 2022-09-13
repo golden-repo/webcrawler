@@ -3,8 +3,8 @@
 
 const mysql = require('mysql');
 const moment = require('moment');
-const DEFAULT_COMPANY_ID = 1;
-const DEFAULT_USER_ID = 104;
+const DEFAULT_COMPANY_ID = 15; //1;
+const DEFAULT_USER_ID = 994; //104;
 var pool = null;
 
 const logger = require('../src/common/logger').Logger;

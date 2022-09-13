@@ -113,6 +113,7 @@ router.get('/spicejet/:pnr/:email', async function(req, res, next) {
       var data = {};
       var payload = req.body;
       var url = `https://www.spicejet.com/trips/details?pnr=${req.params.pnr}&email=${req.params.email}`;
+      //var url = `https://www.spicejet.com/trips/details?pnr=${req.params.pnr}&last=${req.params.last}`;
       var token = await getToken(url, cachedToken);
 
       logger.log('info', `Request for Email: ${req.params.email} and PNR: ${req.params.pnr}`);
@@ -186,6 +187,7 @@ function prepareFlightStatData(data) {
   
   flightStat.status = data.info.status == 2 ? 'Confirmed' : `Not Confirmed - ${data.info.status}`;
   flightStat.paymentStatus = data.info.paidStatus == 0 ? 'Incomplete' : (data.info.paidStatus == 1 ? 'Paid' : `No Info - ${data.info.paidStatus}`);
+  flightStat.pax = data.breakdown.passengers ? Object.keys(data.breakdown.passengers).length : 0;
   // flightStat.billAmount = data.breakdown.totalAmount;
   // flightStat.paidAmount = (data.breakdown.totalAmount - data.breakdown.balanceDue);
   // flightStat.dueAmount = data.breakdown.balanceDue;

@@ -109,9 +109,10 @@ class CheapPortal_Crawl {
             element_loaded = false;
         });
 
-        var chkControl = await this.page.$(selector).catch((reason)=> this.log(reason));
-        
-        element_loaded = !(chkControl===null || chkControl===undefined);
+        if(element_loaded) {
+            var chkControl = await this.page.$(selector).catch((reason)=> this.log(reason));
+            element_loaded = !(chkControl===null || chkControl===undefined);
+        }
         
         return element_loaded;
     }
@@ -354,7 +355,7 @@ class CheapPortal_Crawl {
                     "epoch_date": Date.parse(`${arrival_date} ${end_time}:00.000`)
                 },
                 "availability": parseInt(content[9]),
-                "price": parseFloat(content[7]) + 100,
+                "price": parseFloat(content[7]), // + 100,
                 "duration": diff_text,
                 "recid": `${uniqueid}`
             });
