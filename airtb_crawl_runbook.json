@@ -258,7 +258,7 @@
 							"parameters": [
 								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
 								{"id": 2, "name": "content_type", "value": "text", "sourcetype": "value", "direction": "input"},
-								{"id": 3, "name": "regex", "value": "\\b[a-zA-Z0-9: ]+\\b", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "regex", "value": "\\b[a-zA-Z0-9: -]+\\b", "sourcetype": "value", "direction": "input"},
 								{"id": 4, "name": "raw_content", "value": "${content}", "sourcetype": "variable", "direction": "output"}
 							],
 							"connects": [
