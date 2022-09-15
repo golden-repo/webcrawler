@@ -162,6 +162,7 @@ function bookPendingNotifications(runid, processorid) {
                                         if(err) {
                                             console.log(`Unable to end the pool ${err}`);
                                         }
+                                        console.log(`Returning result to parent`);
                                         resolve(nfty_retrun);
                                     });
                                 }

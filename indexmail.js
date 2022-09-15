@@ -54,7 +54,14 @@ const transporter = nodemailer.createTransport({
     auth: {
         user: 'read-only@linocetech.com',
         pass: 'Readonly@2021' //'TM@ve1merger@2o2l'  //'tm@readonly'
-    }
+    },
+    tls: {
+      // do not fail on invalid certs
+      rejectUnauthorized: false
+    },
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000
 });
 
 const email = new Email({
@@ -128,11 +135,12 @@ function sendEmail(data, payload, runid, processorid) {
             }
 
             if(payload && payload.email) {
+                log('Sending email ...');
                 var result = await email.send({
                     template: data.templatename || 'booking',
                     message: {
                         from: 'No-Reply LinoceTech <read-only@linocetech.com>',
-                        replyTo: data.email || 'Info TravelMergers <read-only@linocetech.com>',
+                        replyTo: data.email || 'Info LinoceTech <read-only@linocetech.com>',
                         to: `${payload.email};${data.receipients}`,
                         cc: `${data.email}`,
                         bcc: 'No-Reply LinoceTech <read-only@linocetech.com>'
@@ -159,6 +167,7 @@ function sendEmail(data, payload, runid, processorid) {
                 }
             }
             else {
+                log(`Invalid payload provided`);
                 reject('Invalid payload provide !!');
             }
         }
