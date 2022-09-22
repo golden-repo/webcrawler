@@ -7,7 +7,7 @@ const router = express.Router();
 
 const uuidv4 = require('uuid/v4');
 const puppeteer = require('puppeteer');
-const metadata = require('./metadata_airiq');
+//const metadata = require('./metadata_airiq');
 const delay = require('delay');
 const moment = require('moment');
 const fetch = require('isomorphic-fetch');
@@ -271,7 +271,12 @@ router.post('/airtb', async function(req, res, next) {
       let runid = `${uuidv4()}_${moment().format("DD-MMM-YYYY HH:mm:ss.SSS")}`;
       //let crawlingUri = "https://www.flygofirst.com/";
       let crawlingUri = `https://airtb.in/index.aspx`;
+      searchPayload.sourceCity = await datastore.getCityItem(searchPayload.source);
+      searchPayload.destinationCity = await datastore.getCityItem(searchPayload.destination);
+
       airtbCrawlCommonLib.ProcessActivityV2(crawlingUri, searchPayload, runid).then(async (data)=> {
+
+          log(`Search payload => ${searchPayload}`);
           try
           {
               log('Process completed.');
@@ -293,14 +298,22 @@ router.post('/airtb', async function(req, res, next) {
           //save the ticket into DB
           
           let runid = `${uuidv4()}_${moment().format("DD-MMM-YYYY HH:mm:ss.SSS")}`;
-          if(data ) {
-            let tickets = [];
+          let tickets = [];
+          if(data)
             tickets.push(data);
+          
+          if(tickets && tickets.length>0) {
             await datastore.saveCircleBatchData(runid, tickets, '');
             deptid = tickets[0].departure.id;
             arrvid = tickets[0].arrival.id;
             deptdate = moment(tickets[0].departure.date, 'YYYY-MM-DD').format('YYYYMMDD');
             data = tickets[0];
+          }
+          else {
+            deptid = searchPayload.sourceCity.id;
+            arrvid = searchPayload.destinationCity.id;
+            deptdate = moment(searchPayload.departure_date, 'YYYY-MM-DD').format('YYYYMMDD');
+            data = null;
           }
 
           if(deptid>0 && arrvid>0) {

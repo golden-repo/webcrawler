@@ -8,7 +8,7 @@ const DEFAULT_USER_ID = 994; //104;
 var pool = null;
 
 const logger = require('../src/common/logger').Logger;
-logger.init('airtb');
+logger.init('crawlapi');
 
 function log() {
     var time = moment().format("HH:mm:ss.SSS");
@@ -367,6 +367,60 @@ async function getCity(conn, city, callback) {
             callback(data);
         }
     });
+}
+
+async function getCityItem(city) {
+    let pool = getDBPool();
+
+    return new Promise((resolve, reject) => {
+        pool.getConnection(function(err, conn) {
+            try
+            {
+                if(err) {
+                    console.log(err);
+                    reject(err);
+                    return;
+                }
+                var sql = `select id from city_tbl where code='${city}'`;
+                
+                try {
+                    conn.query(sql, function (err, data) {
+                        if (err || data===null || data===undefined) {
+                            console.log(err);
+                            reject(err);
+                        }
+                        conn.release();
+                        conn.destroy();
+                        pool.end((err) => {
+                            if(err) {
+                                console.log(`Unable to end the pool ${err}`);
+                            }
+                            // resolve(status);
+                            if(data && Array.isArray(data) && data.length>0) {
+                                resolve(data[0]);
+                            }
+                            else {
+                                resolve(data);
+                            }
+                        });
+    
+                        //console.log(JSON.stringify(data));
+                        // if(callback) {
+                        //     callback(data);
+                        // }
+                    });
+                }
+                catch(e1) {
+                    console.log(e1);
+                    reject(e1);
+                }
+            }
+            catch(ex) {
+                console.log(ex);
+                reject(ex);
+            }
+        });
+    });    
 }
 
 async function getCities(conn, callback) {
@@ -1121,4 +1175,4 @@ function saveAirline(conn, airline, callback) {
 
 //jshint ignore:end
 
-module.exports = {saveData, finalization, saveCircleBatchData, updateExhaustedCircleInventory};
+module.exports = {saveData, finalization, saveCircleBatchData, updateExhaustedCircleInventory, getCityItem};

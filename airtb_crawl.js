@@ -7,7 +7,7 @@ const router = express.Router();
 
 const uuidv4 = require('uuid/v4');
 const puppeteer = require('puppeteer');
-const metadata = require('./metadata_airiq');
+//const metadata = require('./metadata_airiq');
 const delay = require('delay');
 const moment = require('moment');
 const fetch = require('isomorphic-fetch');
@@ -17,7 +17,7 @@ const fetch = require('isomorphic-fetch');
 
 const logger = require('./src/common/logger').Logger;
 
-logger.init('airiqapi');
+logger.init('crawlapi');
 
 var customLevels = {
     levels: {
