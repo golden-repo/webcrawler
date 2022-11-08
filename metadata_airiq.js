@@ -93,8 +93,10 @@ function contentParserV2(content, context) {
 
     try
     {
-        content = content.replace(/\n/g, '');
-        contentParts = content.split('\t');
+        //content = content.replace(/\n/g, '');
+        content = content.replace(/\n\n/g, '\n');
+        //contentParts = content.split('\t');
+        contentParts = content.split('\n');
 
         for (let index = 0; contentParts.length>1 && index < contentParts.length; index++) {
             const part = contentParts[index].trim();
@@ -107,68 +109,78 @@ function contentParserV2(content, context) {
                     deal.ticket_type = 'Economy';
                     break;
                 case 1:
-                    let circle = part.split('//');
-                    if(circle.length>1) {
-                        deal.departure = {"circle": circle[0].trim()};
-                        deal.arrival = {"circle": circle[1].trim()};
-                    }
-                    else {
-                        deal.departure = {"circle": ''};
-                        deal.arrival = {"circle": ''};
-                    }
+                    //let circle = part.split('//');
+                    deal.departure = {"circle": part.trim()};
+                    // if(circle.length>1) {
+                    //     deal.departure = {"circle": circle[0].trim()};
+                    //     deal.arrival = {"circle": circle[1].trim()};
+                    // }
+                    // else {
+                    //     deal.departure = {"circle": ''};
+                    //     deal.arrival = {"circle": ''};
+                    // }
                     break;
-                case 3:
-                    let dept_arv_date = part.match(/([0-9]{2})\s([a-zA-Z]{3})\s([0-9]{4})|([0-9]{0,2}:[0-9]{0,2})/gm);
-
-                    if(dept_arv_date && dept_arv_date.length>0) {
-                        let date = dept_arv_date[0].trim(); //src_dest[0].replace(' ','/');
-                        let time = dept_arv_date.length>1 ? dept_arv_date[1].trim() : '00:00';
-            
-                        //console.log(`${date} - ${time}`);
-                        deal.departure = {"circle": deal.departure.circle, "date": date, "time": time, epoch_date: Date.parse(`${date} ${time}:00.000`)}; //+05:30
-                        deal.arrival = {"circle": deal.arrival.circle, "date": date, "time": time, epoch_date: Date.parse(`${date} ${time}:00.000`)}; //+05:30
-                    }
-
+                case 2:
+                    deal.arrival = {"circle": part.trim()};
+                    // let circle = part.split('//');
+                    // if(circle.length>1) {
+                    //     deal.departure = {"circle": circle[0].trim()};
+                    //     deal.arrival = {"circle": circle[1].trim()};
+                    // }
+                    // else {
+                    //     deal.departure = {"circle": ''};
+                    //     deal.arrival = {"circle": ''};
+                    // }
                     break;
                 case 4:
+                    //let dept_arv_date = part.match(/([0-9]{2})\s([a-zA-Z]{3})\s([0-9]{4})|([0-9]{0,2}:[0-9]{0,2})/gm);
+                    let date = part.trim();
+                    let deptTime = contentParts[6];
+                    let arrvTime = contentParts[7];
+
+                    deal.departure = {"circle": deal.departure.circle, "date": date, "time": deptTime, epoch_date: Date.parse(`${date} ${deptTime}:00.000`)}; //+05:30
+                    deal.arrival = {"circle": deal.arrival.circle, "date": date, "time": arrvTime, epoch_date: Date.parse(`${date} ${arrvTime}:00.000`)}; //+05:30
+                    break;
+                case 5:
                     if(part) {
-                        deal.flight_number = part;
+                        deal.flight_number = part.trim().replace(' ', '-');
                     }
                     else {
                         deal.flight_number = part;
                     }
 
                     break;
-                case 5:
-                    let time = part.trim();
-                    if(time) {
-                        deal.departure.time = time;
-                        deal.arrival.time = time;
+                //case 5:
+                    // let time = part.trim();
+                    // if(time) {
+                    //     deal.departure.time = time;
+                    //     deal.arrival.time = time;
 
-                        let deptDate = moment(`${deal.departure.date} ${deal.departure.time}:00.000`, 'DD MMM YYYY HH:mm:ss');
-                        let arrvDate = moment(`${deal.arrival.date} ${deal.arrival.time}:00.000`, 'DD MMM YYYY HH:mm:ss');
-                        if(deptDate.format('YYYY-MM-DD HH:mm') == arrvDate.format('YYYY-MM-DD HH:mm')) {
-                            let hr = transTime.indexOf(':')>-1 ? parseInt(transTime.split(':')[0], 10) : 0;
-                            let mn = transTime.indexOf(':')>-1 ? parseInt(transTime.split(':')[1], 10) : 0;
+                    //     let deptDate = moment(`${deal.departure.date} ${deal.departure.time}:00.000`, 'DD MMM YYYY HH:mm:ss');
+                    //     let arrvDate = moment(`${deal.arrival.date} ${deal.arrival.time}:00.000`, 'DD MMM YYYY HH:mm:ss');
+                    //     if(deptDate.format('YYYY-MM-DD HH:mm') == arrvDate.format('YYYY-MM-DD HH:mm')) {
+                    //         let hr = transTime.indexOf(':')>-1 ? parseInt(transTime.split(':')[0], 10) : 0;
+                    //         let mn = transTime.indexOf(':')>-1 ? parseInt(transTime.split(':')[1], 10) : 0;
 
-                            if(hr>0) {
-                                arrvDate = arrvDate.add(hr, 'hours');
-                            }
-                            if(mn>0) {
-                                arrvDate = arrvDate.add(mn, 'minutes');
-                            }
+                    //         if(hr>0) {
+                    //             arrvDate = arrvDate.add(hr, 'hours');
+                    //         }
+                    //         if(mn>0) {
+                    //             arrvDate = arrvDate.add(mn, 'minutes');
+                    //         }
 
-                            deal.arrival.date = arrvDate.format('YYYY-MM-DD');
-                            deal.arrival.time = arrvDate.format('HH:mm');
-                        }
+                    //         deal.arrival.date = arrvDate.format('YYYY-MM-DD');
+                    //         deal.arrival.time = arrvDate.format('HH:mm');
+                    //     }
 
-                        deal.departure.epoch_date = Date.parse(`${deal.departure.date} ${deal.departure.time}:00.000`);
-                        deal.arrival.epoch_date = Date.parse(`${deal.arrival.date} ${deal.arrival.time}:00.000`);;
-                    }
+                    //     deal.departure.epoch_date = Date.parse(`${deal.departure.date} ${deal.departure.time}:00.000`);
+                    //     deal.arrival.epoch_date = Date.parse(`${deal.arrival.date} ${deal.arrival.time}:00.000`);;
+                    // }
 
-                    break;
-                case 6:
-                    let qty = parseInt(part.replace('+', ''));
+                    //break;
+                case 11:
+                    let partvalue = part.replace('Seats :', '').trim();
+                    let qty = parseInt(partvalue.replace('+', ''));
         
                     if(qty>0) {
                         deal.availability = qty;
@@ -177,8 +189,8 @@ function contentParserV2(content, context) {
                         deal.availability = -1;
                     }
                     break;
-                case 7:
-                    src_dest = content.match(/((AQP)\d+)/gm);
+                case 9:
+                    src_dest = part.match(/((AQP)\d+)/gm);
                     if(src_dest!==null && src_dest!==undefined && src_dest.length>0) {
                         //console.log(src_dest[0].replace('AQP','').trim());
                         let price = parseFloat(src_dest[0].replace('AQP','').trim());
@@ -674,7 +686,7 @@ module.exports = {
                                     task_id: 4,
                                     task_name: 'read content',
                                     action: 'read',
-                                    selector: '.flit-detls tr>input[type=hidden i], #empty_lbl',
+                                    selector: '.flit-detls >input[type=hidden i], #empty_lbl',
                                     read_type: 'attributes',
                                     attributes: ['value'],
                                     plugins: [
