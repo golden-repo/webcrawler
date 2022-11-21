@@ -12,6 +12,7 @@ const delay = require('delay');
 const moment = require('moment');
 const fetch = require('isomorphic-fetch');
 const airtbCrawlCommonLib = require('./airtb_crawl');
+const airiqCrawlCommonLib = require('./airiqV2_crawl');
 
 // const winston = require('winston');
 // const {combine, timestamp, label, printf} = winston.format;
@@ -249,6 +250,98 @@ function getData() {
         'error': -1
     }
 }
+
+router.post('/airiq', async function(req, res, next) {
+  log('AIRIQ API process started');
+
+  try
+  {
+      const datastore = require('./radharani/airiqV2datastore');
+      let arrvid, deptid;
+      let deptdate = '';
+      arrvid = deptid = 0;
+
+      excutionStarted = true;
+      capturedData = {};
+      process.on('unhandledRejection', (reason, promise) => {
+          log('Unhandled Rejection at:', reason);
+      });
+
+      let searchPayload = req.body;
+
+      let runid = `${uuidv4()}_${moment().format("DD-MMM-YYYY HH:mm:ss.SSS")}`;
+      //let crawlingUri = "https://www.flygofirst.com/";
+      let crawlingUri = `https://airiq.in/`;
+      searchPayload.sourceCity = await datastore.getCityItem(searchPayload.source);
+      searchPayload.destinationCity = await datastore.getCityItem(searchPayload.destination);
+      searchPayload.sector = `${searchPayload.source} // ${searchPayload.destination}`;
+      //searchPayload.departure_date = moment(searchPayload.departure_date, 'YYYY-MM-DD').format('DD/MMM/YYYY');
+
+      airiqCrawlCommonLib.ProcessActivityV2(crawlingUri, searchPayload, runid).then(async (data)=> {
+
+          log(`Search payload => ${JSON.stringify(searchPayload)}`);
+          try
+          {
+              log('Process completed.');
+
+              process.removeAllListeners("unhandledRejection");
+              process.removeAllListeners('exit');
+              process.removeAllListeners();
+          }
+          catch(e) {
+              log(e);
+          }
+          finally {
+              excutionStarted = false;
+          }
+          if(browser) {
+              browser.close();
+              log('Closing browser');
+          }
+          //save the ticket into DB
+          
+          let runid = `${uuidv4()}_${moment().format("DD-MMM-YYYY HH:mm:ss.SSS")}`;
+          let tickets = [];
+          if(data)
+            tickets.push(data);
+          
+          if(tickets && tickets.length>0) {
+            await datastore.saveCircleBatchData(runid, tickets, '');
+            deptid = tickets[0].departure.id;
+            arrvid = tickets[0].arrival.id;
+            deptdate = moment(tickets[0].departure.date, 'YYYY-MM-DD').format('YYYYMMDD');
+            data = tickets[0];
+          }
+          else {
+            deptid = searchPayload.sourceCity.id;
+            arrvid = searchPayload.destinationCity.id;
+            deptdate = moment(searchPayload.departure_date, 'YYYY-MM-DD').format('YYYYMMDD');
+            data = null;
+          }
+
+          if(deptid>0 && arrvid>0) {
+            await datastore.updateExhaustedCircleInventory(runid, deptid, arrvid, deptdate, (val) => {
+                console.log(JSON.stringify(val));
+            }).catch(reason => {
+              logger.log('error', `Error while saving data into DB - ${url}`);
+            });
+          }
+
+          res.status(200).json(data);
+      }).catch((reason) => {
+          log(reason);
+          log(JSON.stringify(capturedData));
+          excutionStarted = false;
+
+          next(reason);
+      });
+  }
+  catch(e) {
+      log(e);
+      excutionStarted = false;
+      next(e);
+  }
+});
 
 router.post('/airtb', async function(req, res, next) {
   log('AIR TB API process started');

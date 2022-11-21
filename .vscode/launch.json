@@ -147,7 +147,7 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Crawl Airtb portal",
+            "name": "Crawl API portal",
             "program": "${workspaceFolder}/indexcrawl_api.js"
         }
    ]

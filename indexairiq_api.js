@@ -112,7 +112,14 @@ router.get('/spicejet/:pnr/:email', async function(req, res, next) {
     try {
       var data = {};
       var payload = req.body;
-      var url = `https://www.spicejet.com/trips/details?pnr=${req.params.pnr}&email=${req.params.email}`;
+      var url = '';
+      
+      if(req.params.email.trim().indexOf('@')>-1) {
+        url =`https://www.spicejet.com/trips/details?pnr=${req.params.pnr}&email=${req.params.email}`;
+      }
+      else {
+        url =`https://www.spicejet.com/trips/details?pnr=${req.params.pnr}&lastName=${req.params.email}`;
+      }
       //var url = `https://www.spicejet.com/trips/details?pnr=${req.params.pnr}&last=${req.params.last}`;
       var token = await getToken(url, cachedToken);
 
@@ -137,7 +144,14 @@ router.get('/spicejet/:pnr/:email', async function(req, res, next) {
 async function getFlightStat(token, payload) {
   var data = null;
 
-  let url = `https://www.spicejet.com/api/v1/booking/retrieveBookingByPNR?recordLocator=${payload.pnr}&emailAddress=${payload.email}`;
+  let url = '';
+  
+  if(payload.email.trim().indexOf('@')>-1) {
+    url = `https://www.spicejet.com/api/v1/booking/retrieveBookingByPNR?recordLocator=${payload.pnr}&emailAddress=${payload.email}`;
+  }
+  else {
+    url = `https://www.spicejet.com/api/v1/booking/retrieveBookingByPNR?recordLocator=${payload.pnr}&lastName=${payload.email}`;
+  }
 
   await fetch(url, {
     method: 'POST',
