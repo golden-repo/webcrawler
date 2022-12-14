@@ -296,6 +296,14 @@ class CheapPortal_Crawl {
         var data = {};
 
         if(content !== undefined && Array.isArray(content)) {
+            if(content[0] == 'You have been successfully checked') {
+                //Already travelled
+                content = content.splice(2);
+            }
+            else if(content[1] == 'No flights are added to this itinerary') {
+                content = ["NA", "01 Jan 2000", "NA", "NA", "NA", "00:00", "NA", "NA", "00:00", "0 Adults", "XXXX", content[2], content[3]];
+            }
+
             data = Object.assign(data, {
                 "flightno": content[0],
                 "departure_time": moment(`${content[1]} ${content[5]}`, "DD MMM YYYY H:m").utcOffset('+5:30').format('YYYY-MM-DD HH:mm'),

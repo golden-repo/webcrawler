@@ -232,6 +232,7 @@ class CheapPortal_Crawl {
         var flag = true;
         var content = '';
         var element_loaded = true;
+        var contents = [];
 
         var selector = this.input_parameters.selector;
         var content_type = this.input_parameters.content_type;
@@ -252,11 +253,20 @@ class CheapPortal_Crawl {
                 });
             } else {
                 // Get inner text
-                content = await this.page.evaluate((sel) => document.querySelector(sel).innerText, selector).catch(reason => {
-                    console.log(`E17 => ${reason}`);
-                    flag = false;
-                });
+                // content = await this.page.evaluate((sel) => document.querySelector(sel).innerText, selector).catch(reason => {
+                //     console.log(`E17 => ${reason}`);
+                //     flag = false;
+                // });    
+
+                contents = await this.page.$$eval(selector, els => els.map(el => el.innerText));
             }
+        }
+
+        if(contents && contents.length>0 && contents.length<=1) {
+            content = contents[0];
+        }
+        else {
+            content = contents.join("~^~");
         }
 
         // this.log('info', `Content => ${content}`);
@@ -272,10 +282,12 @@ class CheapPortal_Crawl {
 
     async tx_parse_content_via_regex(taskinfo) {
         var flag = true;
-        var content = this.input_parameters.content.trim();
+        var contents = this.input_parameters.content.trim().split("~^~");
+        var content = null; //this.input_parameters.content.trim();
         var content_type = this.input_parameters.content_type;
         var regex = new RegExp(this.input_parameters.regex, 'gi');
         var items = [];
+        var contentItems = [];
 
         //this.log('info', `Content to parse => ${content}`);
         //var clear_html_regex = /(<([^>]+)>)/ig;
@@ -288,7 +300,16 @@ class CheapPortal_Crawl {
         
         try
         {
-            items = content.match(regex);
+            if(contents && contents.length>0) {
+                for (let idx = 0; idx < contents.length; idx++) {
+                    content = contents[idx];
+                    items = content.match(regex);
+
+                    if(items && items.length>0) {
+                        contentItems.push(items);
+                    }
+                }
+            }
         }
         catch(e) {
             this.log('error', `${e}`);
@@ -306,14 +327,16 @@ class CheapPortal_Crawl {
 
         //this.log('info', `Content => ${JSON.stringify(items)}`);
 
-        this.context.setContextData('content', items);
+        //this.context.setContextData('content', items);
+        this.context.setContextData('content', contentItems);
+        
         var dataLayer = this.context.getContextData('dataLayer');
 
         // this.log('info', `Content => ${JSON.stringify(items)}`);
         // this.log('info', `DataLayer => ${JSON.stringify(dataLayer)}`);
 
-        this.hlp_set_content_value(items);
-        this.output_parameters.content = items;
+        this.hlp_set_content_value(contentItems);
+        this.output_parameters.content = contentItems;
         this.output_parameters.dataLayer = dataLayer;
 
         return flag;
@@ -322,43 +345,50 @@ class CheapPortal_Crawl {
     async tx_prepare_data(taskinfo) {
         var flag = true;
         var payload = this.context.getContextData('payload');
-        var content = this.input_parameters.content;
+        var contents = this.input_parameters.content;
         var dataLayer = this.input_parameters.dataLayer;
         var departure_date = (payload && payload.departure_date) ? moment(payload.departure_date, 'YYYY-MM-DD').format('YYYY-MM-DD') : null;
         var data = {};
+        var tickets = [];
 
-        if(content !== undefined && Array.isArray(content) && departure_date) {
-            let start_time = content[0].trim().replace('HRS', '').trim();
-            let end_time = content[3].trim().replace('HRS', '').trim();
-            let plus_days = end_time >= start_time ? 0 : 1;
-            let arrival_date = plus_days > 0 ? departure_date.add(plus_days).format('YYYY-MM-DD') : departure_date;
-            let departure_time = moment(`${departure_date} ${start_time}`, "YYYY-MM-DD H:m").format('YYYY-MM-DD H:m')
-            let arrival_time = moment(`${arrival_date} ${end_time}`, "YYYY-MM-DD H:m").format('YYYY-MM-DD H:m')
-            let timediff = moment(arrival_time, 'YYYY-MM-DD H:m').diff(moment(departure_time, 'YYYY-MM-DD H:m'), 'minutes');
-            let diff_text = `${parseInt(timediff / 60)}:${(timediff % 60)}`;
-            let uniqueid = moment(departure_date, 'YYYY-MM-DD').format('YYYYMMDD') + content[6].trim().replace(' ', '');
-            data = Object.assign(data, {
-                "flight_number": content[6].trim().replace(' ', '-'),
-                "flight": (content[6].trim().split(' ').length>1) ? content[6].trim().split(' ')[0].trim() : '',
-                "flight_code": (content[6].trim().split(' ').length>1) ? content[6].trim().split(' ')[0].trim() : '',
-                "ticket_type": "Economy",
-                "departure": {
-                    "circle": content[2],
-                    "date": departure_date,
-                    "time": start_time,
-                    "epoch_date": Date.parse(`${departure_date} ${start_time}:00.000`)
-                },
-                "arrival": {
-                    "circle": content[5],
-                    "date": arrival_date,
-                    "time": end_time,
-                    "epoch_date": Date.parse(`${arrival_date} ${end_time}:00.000`)
-                },
-                "availability": parseInt(content[9]),
-                "price": parseFloat(content[7]), // + 100,
-                "duration": diff_text,
-                "recid": `${uniqueid}`
-            });
+        if(contents !== undefined && Array.isArray(contents) && departure_date) {
+            for (let idx = 0; idx < contents.length; idx++) {
+                const content = contents[idx];
+                data = {};
+                let start_time = content[0].trim().replace('HRS', '').trim();
+                let end_time = content[3].trim().replace('HRS', '').trim();
+                let plus_days = end_time >= start_time ? 0 : 1;
+                let arrival_date = plus_days > 0 ? departure_date.add(plus_days).format('YYYY-MM-DD') : departure_date;
+                let departure_time = moment(`${departure_date} ${start_time}`, "YYYY-MM-DD H:m").format('YYYY-MM-DD H:m')
+                let arrival_time = moment(`${arrival_date} ${end_time}`, "YYYY-MM-DD H:m").format('YYYY-MM-DD H:m')
+                let timediff = moment(arrival_time, 'YYYY-MM-DD H:m').diff(moment(departure_time, 'YYYY-MM-DD H:m'), 'minutes');
+                let diff_text = `${parseInt(timediff / 60)}:${(timediff % 60)}`;
+                let uniqueid = moment(departure_date, 'YYYY-MM-DD').format('YYYYMMDD') + content[6].trim().replace(' ', '') + '_' + idx;
+                data = Object.assign({}, {
+                    "flight_number": content[6].trim().replace(' ', '-'),
+                    "flight": (content[6].trim().split(' ').length>1) ? content[6].trim().split(' ')[0].trim() : '',
+                    "flight_code": (content[6].trim().split(' ').length>1) ? content[6].trim().split(' ')[0].trim() : '',
+                    "ticket_type": "Economy",
+                    "departure": {
+                        "circle": content[2],
+                        "date": departure_date,
+                        "time": start_time,
+                        "epoch_date": Date.parse(`${departure_date} ${start_time}:00.000`)
+                    },
+                    "arrival": {
+                        "circle": content[5],
+                        "date": arrival_date,
+                        "time": end_time,
+                        "epoch_date": Date.parse(`${arrival_date} ${end_time}:00.000`)
+                    },
+                    "availability": parseInt(content[9]),
+                    "price": parseFloat(content[7]), // + 100,
+                    "duration": diff_text,
+                    "recid": `${uniqueid}`
+                });
+                
+                tickets.push(data);
+            }
         }
 
         if(data && data.availability >= payload.adult) {
@@ -367,9 +397,9 @@ class CheapPortal_Crawl {
             data = {};
         }
 
-        this.context.setContextData('responsePayload', data);
-        this.output_parameters.responsePayload = data;
-        this.log('info', `Payload => ${JSON.stringify(data)}`);
+        this.context.setContextData('responsePayload', tickets);
+        this.output_parameters.responsePayload = tickets;
+        this.log('info', `Payload => ${JSON.stringify(tickets)}`);
 
         return flag;
     }
