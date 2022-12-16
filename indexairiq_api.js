@@ -199,7 +199,7 @@ function prepareFlightStatData(data) {
   flightStat.flightno = (data.journeys && data.journeys.length>0 && data.journeys[0].segments && data.journeys[0].segments.length>0) ? 
     `${data.journeys[0].segments[0].identifier.carrierCode}-${data.journeys[0].segments[0].identifier.identifier}` : '';
   
-  flightStat.status = data.info.status == 2 ? 'Confirmed' : `Not Confirmed - ${data.info.status}`;
+  flightStat.status = data.info.status == 2 ? 'Confirmed' : (data.info.status == 3 ? 'Cancelled' : `Not Confirmed - ${data.info.status}`);
   flightStat.paymentStatus = data.info.paidStatus == 0 ? 'Incomplete' : (data.info.paidStatus == 1 ? 'Paid' : `No Info - ${data.info.paidStatus}`);
   flightStat.pax = data.breakdown.passengers ? Object.keys(data.breakdown.passengers).length : 0;
   // flightStat.billAmount = data.breakdown.totalAmount;
