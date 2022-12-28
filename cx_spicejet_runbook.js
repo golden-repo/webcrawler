@@ -301,7 +301,7 @@ class CheapPortal_Crawl {
                 content = content.splice(2);
             }
             else if(content[1] == 'No flights are added to this itinerary') {
-                content = ["NA", "01 Jan 2000", "NA", "NA", "NA", "00:00", "NA", "NA", "00:00", "0 Adults", "XXXX", content[2], content[3], content[1]];
+                content = ["NA", "01 Jan 2000", "NA", "NA", "NA", "00:00", "NA", "NA", "00:00", "0 Adults", "XXXX", content[2], content[3]];
             }
 
             data = Object.assign(data, {
@@ -314,8 +314,7 @@ class CheapPortal_Crawl {
                 "contact": {
                     'phone': content[11].toLowerCase().replace('contact:', '').trim(),
                     'email': content[12].toLowerCase().replace('emailid:', '').trim(),
-                },
-                "remarks": content[13]
+                }
             });
         }
 

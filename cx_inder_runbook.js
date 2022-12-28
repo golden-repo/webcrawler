@@ -8,9 +8,57 @@ const https = require('https');
 
 var html2json = require('html2json').html2json;
 var json2html = require('html2json').json2html;
+const delayTime = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
 class CheapPortal_Crawl {
     //this.config, this.context and this.parameters are implecitely available to access
+
+    /*
+
+    */
+    async tx_read_page_count(taskinfo) {
+        var flag = true;
+        var content = 0;
+        var element_loaded = true;
+        this.hlp_showExecutingTaskInfo(taskinfo);
+
+        var timeout = this.input_parameters.timeout ? parseInt(this.input_parameters.timeout, 10) : 1000;
+        var selector = this.input_parameters.selector;
+        var content_type = this.input_parameters.content_type;
+        if(!content_type) {
+            content_type = 'html';
+        }
+        await this.page.waitForSelector(selector, {timeout: timeout}).catch(reason => {
+            console.log(`E16 => ${reason}`);
+            element_loaded = false;
+        });
+
+        if(element_loaded) {
+            content = await this.page.$$(selector).then((response) => {
+                if(Array.isArray(response)) {
+                    return response.length;
+                }
+                else {
+                    return 0;
+                }
+            }).catch(reason => {
+                console.log(`E16 => ${reason}`);
+                flag = false;
+            });
+        }
+        else {
+            flag = false;
+        }
+
+        //this.log('info', `Content => ${content}`);
+
+        this.context.setContextData('pagecount', parseInt(content, 10));
+        this.context.setContextData('pageindex', 1);
+        this.output_parameters.content = content;
+        flag = content > 0;
+
+        return flag;
+    }    
 
     /*
 
@@ -44,40 +92,17 @@ class CheapPortal_Crawl {
         var time = moment().format("HH_mm_ss_SSS");
 
         var selector = this.input_parameters.selector;
-        // await this.page.click(selector).catch(reason => {
-        //     console.log(`E13 => ${reason}`);
-        //     flag = false;
-        // });
-        var waitOptions = {waitUntil: 'domcontentloaded', timeout: timeout};
-        var element = await this.page.$(selector).catch(reason => {
-            console.log(`E111 => ${reason}`);
+        await this.page.click(selector).catch(reason => {
+            console.log(`E13 => ${reason}`);
+            flag = false;
         });
 
-        var [response] = await Promise.all([
-            // this.page.click(selector).catch(reason => {
-            //     console.log(`E13 => ${reason}`);
-            //     flag = false;
-            // }),
-            element.click().catch(reason => {
-                console.log(`E13 => ${reason}`);
-                flag = false;
-            }),
+        await this.page.waitForNavigation({waitUntil: 'domcontentloaded', timeout: timeout}).catch((reason) => {
+            this.log('error', `Error (button click) => ${reason}`);
+            console.log('error', `Error (button click) => ${reason}`);
+        });
 
-            this.page.waitForNavigation(waitOptions).catch(async (reason) => {
-                this.log('error', `Error (button click) => ${reason}`);
-                console.log('error', `Error (button click) => ${reason}`);
-                await this.page.screenshot({path: `gofirst-${time}.png`});
-            })
-        ]);
-
-        //await this.page.$eval(selector, element => element.click());
-
-        // await this.page.waitForNavigation(waitOptions).catch((reason) => {
-        //     this.log('error', `Error (button click) => ${reason}`);
-        //     console.log('error', `Error (button click) => ${reason}`);
-        // });
-
-        await this.page.screenshot({path: `last-gofirst-${time}.png`});
+        //await this.page.screenshot({path: `cheap-${time}.png`});
 
         return flag;
     }
@@ -89,7 +114,7 @@ class CheapPortal_Crawl {
         var flag = true;
         var content = '';
         var element_loaded = true;
-        var timeout = this.input_parameters.timeout ? parseInt(this.input_parameters.timeout, 10) : 10000;
+        var timeout = this.input_parameters.timeout ? parseInt(this.input_parameters.timeout, 10) : 1000;
 
         var selector = this.input_parameters.selector;
         await this.page.waitForSelector(selector, {timeout: timeout}).catch(reason => {
@@ -107,51 +132,145 @@ class CheapPortal_Crawl {
     /*
 
     */
+    async tx_change_page_index(taskinfo) {
+        var flag = true;
+        var content = 0;
+        var element_loaded = true;
+        this.hlp_showExecutingTaskInfo(taskinfo);
+
+        var timeout = this.input_parameters.timeout ? parseInt(this.input_parameters.timeout, 10) : 1000;
+        var selector = this.input_parameters.selector;
+        var pageloadtimeout = this.input_parameters.pageloadtimeout || 4000;
+        
+        var pageCount = this.context.getContextData('pagecount');
+        var pageIndex = this.context.getContextData('pageindex');
+
+        await this.page.waitForSelector(selector, {timeout: timeout}).catch(reason => {
+            console.log(`E16 => ${reason}`);
+            element_loaded = false;
+        });
+
+        if(element_loaded && pageIndex<=pageCount) {
+            content = await this.page.$$(selector, {timeout: timeout}).then(async (response) => {
+                if(Array.isArray(response)) {
+                    for (let index = 0; index < response.length; index++) {
+                        const pageElement = response[index];
+                        if(pageIndex-1 == index) {
+                            await pageElement.click().catch(reason => {
+                                console.log(`E20 => ${reason}`);
+                                flag = false;
+                            });
+                            break;
+                        }
+                    }
+                }
+                else {
+                    flag = false;
+                    return 0;
+                }
+            }).catch(reason => {
+                console.log(`E16 => ${reason}`);
+                flag = false;
+            });
+        }
+        else {
+            flag = false;
+        }
+
+        //this.log('info', `Content => ${content}`);
+        //await this.page.waitForTimeout(4000);
+        await delayTime(pageloadtimeout);
+
+        //this.context.setContextData('pagecount', parseInt(content, 10));
+        if(flag) {
+            this.context.setContextData('pageindex', (pageIndex+1));
+        }
+
+        return flag;
+    }
+
+    /*
+
+    */
     async tx_read_global_variable(taskinfo) {
         var flag = true;
         var content = '';
         var element_loaded = true;
 
         var varname = this.input_parameters.varname;
-        var filter_key = this.input_parameters.filter_key;
-        var filter_value = this.input_parameters.filter_value;
         content = await this.page.evaluate((vname) => window[vname], varname).catch(reason => {
             this.log('error',`E18 => ${reason}`);
             flag = false;
         });
 
-        if(content !== undefined) {
-            if(Array.isArray(content) || content.constructor.name == 'object') {
-                if(filter_key !== undefined && filter_value !== undefined) {
-                    if(Array.isArray(content)) {
-                        for (let index = 0; index < content.length; index++) {
-                            const contentItem = content[index];
-                            if(contentItem !== undefined && contentItem[filter_key] !== undefined && contentItem[filter_key] == filter_value) {
-                                content = contentItem;
-                                break;
-                            }
-                        }    
-                    }
-                    else {
-                        if(! (content[filter_key] !== undefined && content[filter_key] == filter_value)) {
-                            content = null;
-                        }
-                    }
-                }
-                this.output_parameters[varname] = content;
-            }
-            else {
-                this.output_parameters[varname] = content;
-            }
-        }
-        else {
-            this.output_parameters[varname] = null;
-        }
-        //this.output_parameters.token = content ? content.trim() : null;
-        this.context.setContextData(varname, this.output_parameters[varname]);
-        this.log('info', `${JSON.stringify(this.output_parameters[varname])} -> this.output_parameters.pnrinfo`);
+        this.output_parameters.token = content ? content.trim() : null;
+
+        this.log('info', `${this.output_parameters.token} -> this.output_parameters.token`);
 
         return flag;
+    }
+
+    /*
+
+    */
+    async tx_read_table_rowdata_content(taskinfo) {
+        var flag = true;
+        var content = '';
+        var element_loaded = true;
+
+        var selector = this.input_parameters.selector;
+        var rowid = this.input_parameters.rowid;
+        var tickets = [];
+        var content_type = this.input_parameters.content_type;
+        if(!content_type) {
+            content_type = 'html';
+        }
+        await this.page.waitForSelector(selector).catch(reason => {
+            console.log(`E16 => ${reason}`);
+            element_loaded = false;
+        });
+        var contentPropertyName = content_type = 'html' ? 'innerHTML' : 'innerText';
+
+        if(element_loaded) {
+            // Get table rows for the content
+            var arrayContent = await this.page.$$(selector).catch(reason => {
+                console.log(`E19 => ${reason}`);
+            });
+            if(Array.isArray(arrayContent)) {
+                let ticketItem = null;
+                for (let index = 0; index < arrayContent.length; index++) {
+                    const element = arrayContent[index];
+
+                    //var ticketValue = element.innerText; //await element.getProperty(contentPropertyName).jsonValue();
+                    var ticketValue = await this.page.evaluate(el => el.textContent, element)
+                    var a_element = await element.$eval('a', el => el.getAttribute('href'));
+                    //ticketValue = ticketValue.replaceAll('\n', '');
+                    // ticketValue = ticketValue.replaceAll('\r', '');
+                    //ticketValue = ticketValue.replaceAll('  ', ' ');
+                    // var ticketValue = await this.page.evaluate(el => el[contentPropertyName], element).catch(reason => {
+                    //     console.log(`E20 => ${reason}`);
+                    // });
+
+                    ticketItem = this.hlp_getTicketValue(ticketValue, a_element);
+                    console.log(`Ticket value -> ${JSON.stringify(ticketItem)}`);
+                    tickets.push(ticketItem);
+                }
+
+                // arrayContent = await this.page.evaluate((sel) => document.querySelector(sel).innerHTML, selector).catch(reason => {
+                //     console.log(`E18 => ${reason}`);
+                //     flag = false;
+                // });
+            }
+        }
+
+        //this.log('info', `Content => ${content}`);
+        var existingTickets = this.context.getContextData('tickets') || [];
+        existingTickets.push(...tickets);
+
+        this.context.setContextData('tickets', existingTickets);
+        this.output_parameters.content = tickets;
+
+        return content.trim()!==tickets && tickets.length>0;    
     }
 
     /*
@@ -188,166 +307,11 @@ class CheapPortal_Crawl {
             }
         }
 
-        this.log('info', `Content => ${content}`);
+        //this.log('info', `Content => ${content}`);
 
         this.output_parameters.content = content.trim();
 
         return content.trim()!=='';
-    }
-
-    /*
-
-    */
-    async tx_read_content_append(taskinfo) {
-        var flag = true;
-        var content = '';
-        var element_loaded = true;
-
-        var prev_content = this.input_parameters.content;
-        var selector = this.input_parameters.selector;
-        var content_type = this.input_parameters.content_type;
-        if(!content_type) {
-            content_type = 'html';
-        }
-        await this.page.waitForSelector(selector).catch(reason => {
-            console.log(`E16 => ${reason}`);
-            element_loaded = false;
-        });
-
-        if(element_loaded) {
-            if(content_type === 'html') {
-                // Get inner HTML
-                content = await this.page.evaluate((sel) => document.querySelector(sel).innerHTML, selector).catch(reason => {
-                    console.log(`E18 => ${reason}`);
-                    flag = false;
-                });
-            } else {
-                // Get inner text
-                content = await this.page.evaluate((sel) => document.querySelector(sel).innerText, selector).catch(reason => {
-                    console.log(`E17 => ${reason}`);
-                    flag = false;
-                });
-            }
-        }
-
-        this.log('info', `Content => ${content}`);
-
-        this.output_parameters.content = `${prev_content}\n${content.trim()}`;
-
-        return content.trim()!=='';
-    }
-
-    /*
-    --- Parse content via regex
-    */
-
-    async tx_parse_content_via_regex(taskinfo) {
-        var flag = true;
-        var content = this.input_parameters.content.trim();
-        var content_type = this.input_parameters.content_type;
-        var regex = new RegExp(this.input_parameters.regex, 'gi');
-        var items = [];
-
-        //this.log('info', `Content to parse => ${content}`);
-        //var clear_html_regex = /(<([^>]+)>)/ig;
-        // var clear_html_regex = /(<([^>]+)>)(\s*)/ig;
-        //var clear_html_regex = /(<([^>]+)>)/ig;
-
-        //regex = /\b[a-zA-Z0-9: ]+\b/g;
-        
-        //content = content.replace(clear_html_regex, "\n");
-        
-        try
-        {
-            items = content.match(regex);
-        }
-        catch(e) {
-            this.log('error', `${e}`);
-        }
-
-        // var content_list = content.split('\n');
-        // var items = [];
-        // for (let index = 0; index < content_list.length; index++) {
-        //     let contnet_listitem = content_list[index];
-        //     if(contnet_listitem.trim() !== '') {
-        //         contnet_listitem = contnet_listitem.trim().replace('\t',' ');
-        //         items.push(contnet_listitem);
-        //     }
-        // }
-
-        this.log('info', `Content => ${JSON.stringify(items)}`);
-
-        this.context.setContextData('content', items);
-        var dataLayer = this.context.getContextData('dataLayer');
-
-        this.log('info', `Content => ${JSON.stringify(items)}`);
-        this.log('info', `DataLayer => ${JSON.stringify(dataLayer)}`);
-
-        this.output_parameters.content = items;
-        this.output_parameters.dataLayer = dataLayer;
-
-        return flag;
-    }
-
-    async tx_prepare_data(taskinfo) {
-        var flag = true;
-        var content = this.input_parameters.content;
-        var dataLayer = this.input_parameters.dataLayer;
-        var data = {};
-
-        if(content !== undefined && Array.isArray(content)) {
-            if(content[0] == 'You have been successfully checked') {
-                //Already travelled
-                content = content.splice(2);
-            }
-            else if(content[1] == 'No flights are added to this itinerary') {
-                content = ["NA", "01 Jan 2000", "NA", "NA", "NA", "00:00", "NA", "NA", "00:00", "0 Adults", "XXXX", content[2], content[3], content[1]];
-            }
-
-            data = Object.assign(data, {
-                "flightno": content[0],
-                "departure_time": moment(`${content[1]} ${content[5]}`, "DD MMM YYYY H:m").utcOffset('+5:30').format('YYYY-MM-DD HH:mm'),
-                "arrival_time": moment(`${content[1]} ${content[8]}`, "DD MMM YYYY H:m").utcOffset('+5:30').format('YYYY-MM-DD HH:mm'),
-                "departure_city": content[4],
-                "arrival_city": content[7],
-                "duration": content[6],
-                "contact": {
-                    'phone': content[11].toLowerCase().replace('contact:', '').trim(),
-                    'email': content[12].toLowerCase().replace('emailid:', '').trim(),
-                },
-                "remarks": content[13]
-            });
-        }
-
-        if(dataLayer !== undefined && typeof dataLayer === 'object') {
-            var product = (dataLayer.ecommerce.purchase.products && dataLayer.ecommerce.purchase.products.length>0) ? dataLayer.ecommerce.purchase.products[0] : null;
-            var item = (dataLayer.ecommerce.purchase.items && dataLayer.ecommerce.purchase.items.length>0) ? dataLayer.ecommerce.purchase.items[0] : null;
-
-            data = Object.assign(data, {
-                "triptype": dataLayer.trip_type,
-                "currency": dataLayer.currency,
-                //"bill_amount": parseFloat(dataLayer.value),
-                "total_pax": parseInt(dataLayer.passengers_total, 10),
-                "PNR": dataLayer.ecommerce.purchase.actionField.id,
-                //"penidng_amount": parseFloat(dataLayer.ecommerce.purchase.actionField.revenue),
-                "payment_due": parseFloat(dataLayer.ecommerce.purchase.actionField.revenue)>0,
-                "flightno": product ? product.id : data.flightno,
-                "sector": product ? product.name : null,
-                //"price_per_pax": product ? parseFloat(product.price) : 0,
-                //"price_per_pax": product ? parseFloat(product.price) : 0,
-                //"pax_varient": product ? product.varient : "adult",
-                "origin": item ? item.origin : null,
-                "destination": item ? item.destination : null,
-                "start_date": item ? moment(item.start_date).utcOffset('+5:30').format('YYYY-MM-DD') : null,
-            });
-        }
-
-        this.context.setContextData('pnrpayload', data);
-        this.output_parameters.pnrpayload = data;
-
-        this.log('info', `PNR Payload => ${JSON.stringify(data)}`);
-
-        return flag;
     }
 
     /*
@@ -443,8 +407,7 @@ class CheapPortal_Crawl {
 
     tx_transform_ticket_data(taskinfo) {
         var flag = true;
-        var token = this.input_parameters.token;
-        var tickets = this.input_parameters.tickets;
+        var tickets = this.context.getContextData('tickets') || [];
 
         var transformedTickets = [];
 
@@ -456,37 +419,37 @@ class CheapPortal_Crawl {
                 {
                     var tkt = {};
                     tkt.ticket_type='Economy';
-                    tkt.type=ticket.flight_number.indexOf('//') > -1 ? 'ROUNDTRIP' : 'ONEWAY';
-                    tkt.flight=this.hlp_getFlightCode(ticket.airline.id);
-                    tkt.flight_number=ticket.flight_number;
+                    tkt.type='ONEWAY';
+                    tkt.flight=this.hlp_getFlightCode(ticket.flight);
+                    tkt.flight_number=ticket.flight;
                     tkt.departure = {};
                     tkt.arrival = {};
                     tkt.rtn_departure = {};
                     tkt.rtn_arrival = {};
                     tkt.recid = `TKT-CHP-${ticket.id}`;
+                    tkt.id = ticket.id;
 
-                    if(tkt.type === 'ONEWAY' && parseInt(ticket.available_seats, 10)>0) {
-                        let sectrs = ticket.sector_name.split('-');
-                        if(sectrs.length==2) {
-                            tkt.departure.circle = sectrs[0].trim();
-                            tkt.arrival.circle = sectrs[1].trim();
+                    if(tkt.type === 'ONEWAY' && parseInt(ticket.pax, 10)>0) {
+                        tkt.departure.circle = ticket.source.trim();
+                        tkt.arrival.circle = ticket.destination.trim();
+                        tkt.departure.date = moment(ticket.departureDate).format('YYYY-MM-DD'); //moment(ticket.departureDate).utcOffset('+05:30').format('YYYY-MM-DD');
+                        tkt.arrival.date = moment(ticket.arrivalDate).format('YYYY-MM-DD'); //moment(ticket.departureDate).utcOffset('+05:30').format('YYYY-MM-DD');
+                        tkt.departure.time = moment(ticket.departureDate).format('HH:mm');
+                        tkt.arrival.time = moment(ticket.arrivalDate).format('HH:mm');
 
-                            tkt.departure.date = tkt.arrival.date = moment(ticket.departure_at).utcOffset('+05:30').format('YYYY-MM-DD');
-                            if(ticket.departure_time) {
-                                tkt.departure.time = ticket.departure_time.split('-').length>0 ? ticket.departure_time.split('-')[0] : moment(ticket.departure_at).format('HH:mm');
-                                tkt.arrival.time = ticket.departure_time.split('-').length>0 ? ticket.departure_time.split('-')[1] : moment(ticket.departure_at).format('HH:mm');
-                            }
-                            else {
-                                tkt.departure.time = tkt.arrival.time = moment(ticket.departure_at).format('HH:mm');
-                            }
+                        if(tkt.departure.time > tkt.arrival.time) {
+                            tkt.arrival.date = moment(ticket.departureDate).add(1, 'd').format('YYYY-MM-DD');
+                        }
 
-                            tkt.departure.epoch_date = Date.parse(`${tkt.departure.date} ${tkt.departure.time}:00.000`);
-                            tkt.arrival.epoch_date = Date.parse(`${tkt.arrival.date} ${tkt.arrival.time}:00.000`);
+                        tkt.departure.epoch_date = Date.parse(`${tkt.departure.date} ${tkt.departure.time}:00.000`);
+                        tkt.arrival.epoch_date = Date.parse(`${tkt.arrival.date} ${tkt.arrival.time}:00.000`);
 
-                            tkt.availability = parseInt(ticket.available_seats, 10);
-                            tkt.max_no_of_person = tkt.availability;
-                            tkt.price = parseFloat(ticket.price);
+                        tkt.availability = parseInt(ticket.pax, 10);
+                        tkt.max_no_of_person = tkt.availability;
+                        tkt.price = parseFloat(ticket.rate);
 
+                        let ticketItem = transformedTickets.find(item => item.id == tkt.id);
+                        if(ticketItem == null || ticketItem == undefined) {
                             transformedTickets.push(tkt);
                         }
                     }
@@ -497,7 +460,9 @@ class CheapPortal_Crawl {
             }
         }
 
-        this.output_parameters.tickets = transformedTickets;
+        this.output_parameters.ticketsdata = transformedTickets;
+        this.context.setContextData('tickets', transformedTickets);
+
         this.log('info', JSON.stringify(transformedTickets));
 
         return flag;
@@ -763,7 +728,7 @@ class CheapPortal_Crawl {
 
         let runid = `${uuidv4()}_${moment().format("DD-MMM-YYYY HH:mm:ss.SSS")}`;
         var tickets = this.input_parameters.tickets;
-        const datastore = require('./radharani/cheapdatastore');
+        const datastore = require('./radharani/indrdatastore');
 
         try
         {
@@ -810,26 +775,44 @@ class CheapPortal_Crawl {
     }
 
     hlp_getFlightCode(flightid) {
+        var flgihtRegEx = new RegExp(/^\w{0,2}/, "gm");
+        var flightItemList = flightid.match(flgihtRegEx);
         let flightcode = 'SPL';
-
-        switch (flightid) {
-            case 1:
-                flightcode = "G8"
-                break;
-            case 2:
-                flightcode = "6E"
-                break;
-            case 3:
-                flightcode = "SG"
-                break;        
-            case 4:
-                flightcode = "I5"
-                break;        
-            default:
-                break;
+        if(flightItemList && flightItemList.length>0) {
+            flightcode = flightItemList[0].trim();
         }
 
         return flightcode;
+    }
+
+    hlp_showExecutingTaskInfo(taskinfo) {
+        var taskDescription = taskinfo.description || taskinfo.name;
+
+        console.log(`Task info => ${taskDescription}`);
+
+        return;
+    }
+
+    hlp_getTicketValue(ticketValue, ticketIdAttribute) {
+        var regex1 = new RegExp(/[0-9]+/, 'gm');
+        var id = ticketIdAttribute.match(regex1);
+        var regex = new RegExp(/^[a-zA-Z0-9 -:]+/, 'gm');
+        var items = ticketValue.match(regex);
+        var ticketData = {};
+
+        if(items && items.length>0 && id && id.length>0) {
+            ticketData.id = parseInt(id[0].trim(), 10);
+            ticketData.airline = items[0].trim();
+            ticketData.flight = items[4].trim();
+            ticketData.source = items[5].trim();
+            ticketData.destination = items[6].trim();
+            ticketData.departureDate = moment(items[7].trim(), 'YYYY-MM-DD HH:mm');
+            ticketData.arrivalDate = moment(items[8].trim(), 'YYYY-MM-DD HH:mm');
+            ticketData.pax = parseInt(items[9].trim(), 10);
+            ticketData.rate = parseFloat(items[10].trim());
+        }
+
+        return ticketData;
     }
 }
 

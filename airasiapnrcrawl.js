@@ -88,10 +88,24 @@ function prepareFlightStatData(responsePayload) {
             result.departureTerminal = journey ? journey.designator.departureTerminal : null;
             result.stops = journey ? journey.stops : -1;
             result.paymentStatus = (responsePayload.info && responsePayload.info.paidStatus == 1) ? 'Paid' : 'Incomplete';
-            result.status = (responsePayload.info && responsePayload.info.status == 2) ? 'Confirmed' : 'Not Confirmed';
+            if(responsePayload.info) {
+                if(responsePayload.info.status == 2) {
+                    result.status = (responsePayload.info && responsePayload.info.status == 2) ? 'Confirmed' : 'Not Confirmed';
+                }
+                else if(responsePayload.info.status == 3) {
+                    result.status = 'Cancelled';
+                }
+                else {
+                    result.status = 'Not Confirmed';
+                }
+            }
+            else {
+                result.status = 'Not Confirmed';
+            }
             result.pax = (responsePayload.passengers && responsePayload.passengers.length > 0) ? responsePayload.passengers.length : 0;
             result.fligtno = segment && segment.flightReference ? segment.flightReference.substring(9, segment.flightReference.length-7).trim() : null;
             result.fligtno = result.fligtno ? result.fligtno.replace(' ', '-').trim() : '';
+            result.remarks = (responsePayload.info && responsePayload.info.status == 3) ? "Booking cancelled or flight has been cancelled" : null;
         }
         catch(ex) {
             result.error = ex.message;
@@ -106,7 +120,8 @@ async function searchPNR(pnr, additionalData) {
 
     var subscription = getSubscription();
 
-    let url = `https://api.airasia.co.in/b2c-CheckIn/v2/check-in/retrieve/byRecordLocator`;
+    //let url = `https://api.airasia.co.in/b2c-CheckIn/v2/check-in/retrieve/byRecordLocator`;
+    let url = `https://api.airasia.co.in/b2c-CheckIn/v2/mmb/retrieve/byRecordLocator`;
   
     await fetch(url, {
       method: 'POST',

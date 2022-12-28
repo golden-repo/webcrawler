@@ -13,6 +13,7 @@ const moment = require('moment');
 const fetch = require('isomorphic-fetch');
 const goFirstCommonLib = require('./gofirstpnrcrawl');
 const airasiaCommonLib = require('./airasiapnrcrawl');
+const spicejetCommonLib = require('./spicejetpnrcrawl');
 
 // const winston = require('winston');
 // const {combine, timestamp, label, printf} = winston.format;
@@ -139,6 +140,55 @@ router.get('/spicejet/:pnr/:email', async function(req, res, next) {
       console.error(`Error while getting programming languages `, err.message);
       next(err);
     }
+});
+
+router.get('/spicejetv2/:pnr/:email', async function(req, res, next) {
+  log('SpiceJet API process started');
+
+  try
+  {
+      excutionStarted = true;
+      capturedData = {};
+      process.on('unhandledRejection', (reason, promise) => {
+          log('Unhandled Rejection at:', reason);
+      });
+
+      let runid = `${uuidv4()}_${moment().format("DD-MMM-YYYY HH:mm:ss.SSS")}`;
+      //let crawlingUri = "https://www.flygofirst.com/";
+      let crawlingUri = `https://book.flygofirst.com/Booking/Retrieve?rl=${req.params.pnr}&ln=${req.params.email}`;
+      goFirstCommonLib.ProcessActivityV2(crawlingUri, {'pnr': req.params.pnr, 'email': req.params.email}, runid).then((data)=> {
+          try
+          {
+              log('Process completed.');
+
+              process.removeAllListeners("unhandledRejection");
+              process.removeAllListeners('exit');
+              process.removeAllListeners();
+          }
+          catch(e) {
+              log(e);
+          }
+          finally {
+              excutionStarted = false;
+          }
+          if(browser) {
+              browser.close();
+              log('Closing browser');
+          }
+          res.status(200).json(data);
+      }).catch((reason) => {
+          log(reason);
+          log(JSON.stringify(capturedData));
+          excutionStarted = false;
+
+          next(reason);
+      });
+  }
+  catch(e) {
+      log(e);
+      excutionStarted = false;
+      next(e);
+  }
 });
 
 async function getFlightStat(token, payload) {

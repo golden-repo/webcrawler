@@ -1,19 +1,23 @@
-//In this program we will be logging into github and will be downloading specific file.
-
 //jshint esversion:6
 //const tty = require('tty');
 const cron = require("node-cron");
 const express = require("express");
 const fs = require("fs");
+const router = express.Router();
 
 const uuidv4 = require('uuid/v4');
 const puppeteer = require('puppeteer');
-//const metadata = require('./metadata_indr');
+const metadata = require('./metadata_airiq');
 const delay = require('delay');
 const moment = require('moment');
-const winston = require('winston');
-const {combine, timestamp, label, printf} = winston.format;
-const DailyRotateFile = require('winston-daily-rotate-file');
+const fetch = require('isomorphic-fetch');
+// const winston = require('winston');
+// const {combine, timestamp, label, printf} = winston.format;
+// const DailyRotateFile = require('winston-daily-rotate-file');
+
+const logger = require('./src/common/logger').Logger;
+
+logger.init('airiqapi');
 
 var customLevels = {
     levels: {
@@ -30,47 +34,21 @@ var customLevels = {
     }
 };
 
-const myFormat = printf(({ level, message, label, timestamp }) => {
-    return `${timestamp} [${label}] ${level}: ${message}`;
-});
-
 var timeFormatFn = function() {
     'use strict';
     return moment().format(cfg.timeFormat);
 };
 
-winston.configure({
-    defaultMeta: {service: 'inder-crawler'},
-    format: combine(label({label: 'cheapcrawler'}), timestamp(), myFormat),
-    transports:[
-       new winston.transports.File({filename: `cheap_execution_log_${moment().format("D_M_YYYY")}.log`, })
-    ]
-});
-
-const USERINPUT = {
-    id: 1,
-    controlid: '',
-    delaybefore: -1,
-    selector: '',
-    checkcontent: '',
-    type: '',
-    value: '',
-    action: '',
-    delayafter: -1,
-    checkselector: '',
-    next: 2
-};
-
-app = express();
-
-const TIMEOUT = 6000;
-const POSTBACK_TIMEOUT = 10000;
+const TIMEOUT = 10000; //6000;
+const POSTBACK_TIMEOUT = 12000; //8000
 const POLLINGDELAY = 100;
 
 var browser = null;
 var page = null;
 var pageConfig = null;
 var capturedData = {};
+//jshint ignore:start
+
 var context = {};
 var context_type = () => {
 
@@ -100,14 +78,6 @@ var context_type = () => {
         if(item_val === null || item_val === undefined) {
             this._data.push({key, val});
         }
-        else {
-            for (let index = 0; index < this._data.length; index++) {
-                const item = this._data[index];
-                if(item && item.key == key) {
-                    item.val = val;
-                }
-            }
-        }
 
         return this;
     }
@@ -136,12 +106,9 @@ function log() {
 
     args.unshift(time);
     console.log.apply(console, args);
-    winston.info(args.join(' '));
-}
-
-async function takeSnapshot(filename) {
-    var time = moment().format("HH_mm_ss_SSS");
-    await page.screenshot({path: `${filename}-${time}.png`});
+    //winston.info(args.join(' '));
+    var msg = args.join(' ');
+    logger.log('info', msg);    
 }
 
 let pageLoaded = true;
@@ -155,7 +122,8 @@ async function navigatePageV2(pageName) {
                 headless:true,
                 ignoreHTTPSErrors: true,
                 ignoreDefaultArgs: ['--enable-automation'],
-                args: ['--start-fullscreen','--no-sandbox','--disable-setuid-sandbox', '--disable-gpu']
+                args: ['--start-fullscreen','--no-sandbox','--disable-setuid-sandbox', '--disable-gpu'],
+                timeout: 30000
                 // args: ['--start-fullscreen']
             }).catch((reason) => {
                 log(reason);
@@ -164,6 +132,9 @@ async function navigatePageV2(pageName) {
         //const page = await browser.newPage();
         let pages = await browser.pages();
         page = pages.length>0?pages[0]:await browser.newPage();
+        await page.setCacheEnabled(true);
+        await page.setRequestInterception(true);
+
         //log('after new page created');
         await page.setViewport({ width: 1366, height: 768});
         //log('after view port');
@@ -173,10 +144,51 @@ async function navigatePageV2(pageName) {
         });*/
         //const response = await page.goto("https://github.com/login");
         //await page.setUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1");
-        await page.setUserAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36");
 
+        //await page.setUserAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36");
+        //await page.setUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1").catch((reason) => log(`Error in page.setUserAgent ${reason}`));
+        log('user agent set');
+
+        await page.setExtraHTTPHeaders({
+            'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1',
+            'upgrade-insecure-requests': '1',
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
+            'accept-encoding': 'gzip, deflate, br',
+            'accept-language': 'en-US,en;q=0.9,en;q=0.8'
+        })        
+
+        log('Intercepting request ...');
+
+        page.on('request', (req) => {
+            let url = req.url().toLowerCase();
+            if(req.resourceType() === 'stylesheet' || req.resourceType() === 'image' || req.resourceType() === 'font' || url.indexOf('fonts')>-1
+             || url.indexOf('animate')>-1 || url.indexOf('des')>-1 || url.indexOf('tabs')>-1){
+                //log('info', `Url Disallowed : ${url}`);
+                req.abort();
+            }
+            else {
+                //log(`Req.Type : ${req.resourceType()} - ${req.url()}`);
+                //log('info', `Url Allowed : ${url}`);
+                req.continue();
+            }
+        });
+
+        page.on('domcontentloaded',()=> {
+            log('dom even fired');
+            console.log('domcontentloaded loaded');
+            pageLoaded = true;
+        });
+
+        page.on('load',()=> {
+            log('dom load even fired');
+            console.log('load loaded');
+            pageLoaded = true;
+        });        
+        
         //let response = await page.goto(pageName, {waitUntil:'load', timeout:30000}); //wait for 10 secs as timeout
-        let response = await page.goto(pageName, {waitUntil:'domcontentloaded', timeout:30000}); //wait for 10 secs as timeout
+        let response = await page.goto(pageName, {waitUntil:'load', timeout:30000}).catch(reason => {
+            log(`Error goto => ${reason}`);
+        }); //wait for 10 secs as timeout
         //log(await page.cookies());
         //await page.waitForNavigation();
         //log('after navigation done');
@@ -206,39 +218,10 @@ async function navigatePageV2(pageName) {
         // pageConfig = metadata.pages.find(pg => {
         //     return response.url().indexOf(pg.name)>-1;
         // });
-        
-        page.on('domcontentloaded',()=> {
-            log('dom even fired');
-            console.log('domcontentloaded loaded');
-            pageLoaded = true;
-        });
-
-        page.on('load',()=> {
-            log('dom load even fired');
-            console.log('load loaded');
-            pageLoaded = true;
-        });
 
         //var actionItem = pageConfig.actions[0];
 
         //block image loading
-        log('Intercepting request ...');
-
-        await page.setCacheEnabled(true);
-        await page.setRequestInterception(true);
-        page.on('request', (req) => {
-            let url = req.url().toLowerCase();
-            if(req.resourceType() === 'stylesheet' || req.resourceType() === 'image' || req.resourceType() === 'font' || url.indexOf('fonts')>-1
-             || url.indexOf('animate')>-1 || url.indexOf('des')>-1 || url.indexOf('tabs')>-1){
-                //log('info', `Url Disallowed : ${url}`);
-                req.abort();
-            }
-            else {
-                //log(`Req.Type : ${req.resourceType()} - ${req.url()}`);
-                //log('info', `Url Allowed : ${url}`);
-                req.continue();
-            }
-        });
     }
     catch(fe) {
 
@@ -358,8 +341,11 @@ function getActionExecutor(context, action=null, task_info=null, callback) {
 function load_rb_config(tenantname='') {
     var rb_file_name = '';
     switch (tenantname) {
-        case 'inder':
-            rb_file_name = './inder_crawl_runbook.json';
+        case 'gofirst':
+            rb_file_name = './gofirst_crawl_runbook.json';
+            break;
+        case 'spicejet':
+            rb_file_name = './spicejet_crawl_runbook.json';
             break;
         default:
             break;
@@ -377,14 +363,7 @@ function replaceVariable(expr, context) {
         i++;
         const varName = expr.substr(j+2, (expr.indexOf('}', j)-(j+2)));
         if(varName && varName!=='') {
-            let contatValue = '';
-            //context.getContextData(varName) || context.parameters[varName] || '';
-            if(context.getContextData(varName) !== undefined) {
-                contatValue = context.getContextData(varName);
-            }
-            else if(context.parameters[varName] !== undefined) {
-                contatValue = context.parameters[varName];
-            }
+            const contatValue = context.getContextData(varName) || context.parameters[varName] || '';
             
             vars.push({key: varName, val: contatValue});
 
@@ -426,7 +405,9 @@ function getNextActionTask(context, action = null, taskinfo = null) {
     return nxttaskinfo;
 }
 
-async function ProcessActivityV2(targetUri, runid=uuid5()) {
+async function ProcessActivityV2(targetUri, payload, runid=uuid5()) {
+    var data = {};
+
     try
     {
         if(targetUri===undefined || targetUri===null || targetUri==="")
@@ -439,12 +420,13 @@ async function ProcessActivityV2(targetUri, runid=uuid5()) {
         if(browser!==null && page!==null) {
             log('URL -> ' + page.url());
 
-            config_data = load_rb_config('inder');
+            config_data = load_rb_config('spicejet');
             let contextObj = getContext();
             contextObj.setContextData('targeturi', targetUri);
             contextObj.setContextData('browser', browser);
             contextObj.setContextData('page', page);
             contextObj.setContextData('runbook', config_data);
+            contextObj.setContextData('payload', payload);
 
             for(pageIdx=0; pageIdx<config_data.pages.length; pageIdx++) {
                 pageConfig = config_data.pages[pageIdx];
@@ -483,267 +465,16 @@ async function ProcessActivityV2(targetUri, runid=uuid5()) {
                     }
                 }
             }
+
+            data = contextObj.getContextData('pnrpayload');
+            log('info', `Execution completed`);
         }
     }
     catch(ex) {
         log(`Retrying once again.${ex}`);
     }
 
-    return;
-}
-
-async function ProcessActivity(targetUri, runid=uuid5()) {
-    //await navigatePage("https://github.com/login");
-    try
-    {
-        if(targetUri===undefined || targetUri===null || targetUri==="")
-            return;
-
-        this.init_context();
-        await navigatePage(targetUri);
-        //log('Page navigated...');
-        if(browser!==null && page!==null) {
-            //log('URL -> ' + page.url());
-
-            this.getContext().setContextData('targeturi', targetUri);
-            this.getContext().setContextData('browser', browser);
-            this.getContext().setContextData('page', page);
-            this.getContext().setContextData('metadata', metadata);
-
-            for(pageIdx=0; pageIdx<metadata.pages.length; pageIdx++) {
-                pageConfig = metadata.pages[pageIdx];
-                this.getContext().setContextData('pageconfig', pageConfig);
-
-                var actionExecutor = this.getActionExecutor(this.getContext(), pageConfig.actions[0], (status) => {
-                    console.log(status);
-                });
-
-                while(actionExecutor !== null) {
-                    actionExecutor.execute();
-
-                    actionExecutor = this.getActionExecutor(this.getContext(), actionExecutor.getNextAction(), (status) => {
-                        console.log(status);
-                    });
-                }
-
-                let repeatsourceContent = null;
-                let repeatsourceData = null;
-                let repeatsourceType = null;
-                let repeatsource = null;
-
-                let isrepeat = (pageConfig.actions[0].repeat===undefined 
-                    || pageConfig.actions[0].repeat===null)?false:pageConfig.actions[0].repeat;
-                if(isrepeat) {
-                    repeatsource = pageConfig.actions[0].repeatsource;
-                    repeatsourceType = (repeatsource===undefined || repeatsource===null)?null:((repeatsource instanceof Array)?
-                        'array':((repeatsource instanceof Number)?'number':(typeof(repeatsource)==='function'?'function':null)));
-                    if(repeatsourceType==='array' || repeatsourceType==='number') {
-                        repeatsourceData = repeatsource;
-                    }
-                    else if(repeatsourceType==='function') {
-                        repeatsourceData = repeatsource;
-                    }
-                    
-                    if( pageConfig.actions[0].repeatsourceselector!==undefined && 
-                        pageConfig.actions[0].repeatsourceselector!==null && isrepeat)
-                    {
-                        //repeatsourceControl = await objPage.$$(pageConfig.actions[0].repeatsourceselector);
-                        let type = (pageConfig.actions[0].repeatsourceContentType===undefined || 
-                                pageConfig.actions[0].repeatsourceContentType===undefined)?'html':
-                                (pageConfig.actions[0].repeatsourceContentType);
-
-                        if(type==='html') {
-                            await page.waitForSelector(pageConfig.actions[0].repeatsourceselector, {timeout: TIMEOUT}).catch(reason => log(`E1 => ${reason}`));
-                            repeatsourceContent = await page.$eval(pageConfig.actions[0].repeatsourceselector, e => e.innerHTML).catch(reason => log(`E2 => ${reason}`));
-                        }
-                        else if(type==='text') {
-                            await page.waitForSelector(pageConfig.actions[0].repeatsourceselector, {timeout: TIMEOUT}).catch(reason => log(`E3 => ${reason}`));;
-                            repeatsourceContent = await page.$eval(pageConfig.actions[0].repeatsourceselector, e => e.innerText).catch(reason => log(`E4 => ${reason}`));;
-                        }
-
-                        if(repeatsourceType==='array' || repeatsourceType==='number') {
-                            repeatsourceData = repeatsource;
-                        }
-                        else if(repeatsourceType==='function' && repeatsourceContent!==null && repeatsourceContent!==undefined) {
-                            //log('getting repeatSourceData');
-                            repeatsourceData = repeatsource(repeatsourceContent); //it should return array
-                            //log('got repeatSourceData');
-                            if(repeatsourceData instanceof Number) {
-                                repeatsourceType = 'number';
-                            }
-                            else if(repeatsourceData instanceof Array) {
-                                repeatsourceType = 'array';
-                            }
-                            else if(repeatsourceData instanceof Object) {
-                                repeatsourceType = 'object';
-                            }
-
-                            if(repeatsourceData===undefined)
-                            {
-                                repeatsourceData = null;
-                            }
-                        }
-                    }
-                }
-
-                if(pageConfig!==null) //We landed to right page now
-                {
-                    let loopCount = 1;
-                    if(repeatsourceType===null || repeatsourceType==='object') {
-                        loopCount = 1;
-                    }
-                    else if(repeatsourceType==='number') {
-                        loopCount = parseInt(repeatsourceData);
-                    }
-                    else if(repeatsourceType==='array') {
-                        loopCount = repeatsourceData.length;
-                    }
-
-                    //for(var i=0; i<loopCount; i++) { //
-                    var i=0;
-                    while(i<loopCount) {
-                        let repeatsourceDataValue = (repeatsourceType==='array')?repeatsourceData[i]:'NA';
-
-                        let src_dest = repeatsourceDataValue.match(/\w+/gi);
-                        let key = '';
-                        if(src_dest!==null && src_dest.length>1) {
-                            key = (src_dest[0].trim() + '_' + src_dest[1].trim());
-                            let storeData = getStore();
-                            storeData[key]=[];
-                            storeData.currentKey = {'source': src_dest[0].trim(), 'destination': src_dest[1].trim(), 'key': key};
-                        }
-
-                        log(`${i} - ${repeatsourceDataValue}`);
-                        //remove false from here, this is just for testing.
-                        if(pageConfig.actions[0].userinputs.length>0) {
-                            //for(var iidx=0; iidx<pageConfig.actions[0].userinputs.length; iidx++) {
-                            var iidx = 0;
-                            var piidx = 0;
-                            pageConfig.actions[0].userinputs.map((val, ndx) => {
-                                val.retrycount = 0;
-                            });
-                            //while(iidx<pageConfig.actions[0].userinputs.length) {
-                            while(iidx<pageConfig.actions[0].userinputs.length) {
-                                var userInput =  pageConfig.actions[0].userinputs[iidx];
-                                
-                                //this is the place we need to use repeat functionality
-                                if(repeatsourceType===null) {
-                                    await performUserOperation(page, userInput, null, i, runid).catch(reason => log(`E5 => ${reason}`));
-                                }
-                                else if(repeatsourceType==='number') {
-                                    await performUserOperation(page, userInput, null, i, runid).catch(reason => log(`E6 => ${reason}`));
-                                }
-                                else if(repeatsourceType==='array') {
-                                    try
-                                    {
-                                        //log(`Perform user operation ${i} - ${userInput.action}`);
-                                        await performUserOperation(page, userInput, repeatsourceData[i], i, runid).catch(reason => log(`E7 => ${reason}`));
-                                        // await performUserOperation(page, userInput, repeatsourceData[i], function(input, sourcedata) {
-                                        //     log(`Error happened at index ${i}`);
-                                        //     i--; break;
-                                        // });
-                                        //log(`Perform user operation ${i} - ${userInput.action} Done`);
-                                    }
-                                    catch(e) {
-                                        log(e)
-                                        //if(e.toLowerCase()==='control missing') {
-                                        log('Retrying once again.')
-                                        //iidx = pageConfig.actions[0].userinputs.length-2;
-                                        iidx = piidx;
-                                        i--;
-                                        //break;
-                                        //}
-                                        continue;
-                                    }
-                                }
-                                else if(repeatsourceType==='object') {
-                                    //no idea what to do here
-                                }
-                                piidx = iidx;
-                                if(userInput.next!==undefined && userInput.next!=null) {
-                                    let nextActivity = userInput.next;
-                                    let nextActivityId = -1;
-                                    if(typeof(nextActivity) === 'number')
-                                    {
-                                        nextActivityId = parseInt(nextActivity);
-                                    }
-                                    else if(typeof(nextActivity) === 'function') {
-                                        if(userInput.retrycount!==undefined && userInput.retrycount!==null) {
-                                            let retryCount = parseInt(userInput.retrycount);
-                                            userInput.retrycount=++retryCount;
-                                        }
-
-                                        nextActivityId = await nextActivity.call(this, userInput);
-                                    }
-                                    if(nextActivityId>-1) {
-                                        nextActivityId = pageConfig.actions[0].userinputs.findIndex((val, idx) => {
-                                            return (val.id===nextActivityId);
-                                        });
-                                    }
-                                    if(nextActivityId>-1)
-                                        iidx = nextActivityId;
-                                    else if(nextActivityId===-1)
-                                        iidx = 999;
-                                    else
-                                        iidx++;
-                                }
-                                else {
-                                    iidx++;
-                                }
-                            }
-
-                            log(`END :: ${i} - ${repeatsourceDataValue}`);
-                        }
-                        else {
-                            //there is no user input. Kind of code cleaning process.
-                            try
-                            {
-                                let storeObj = getStore();
-                                let totalRowsFetched = 0;
-                                let keys = Object.keys(storeObj);
-                                for(var sdx=0; sdx<keys.length; sdx++) {
-                                    let keyName = keys[sdx].trim();
-                                    totalRowsFetched += storeObj[keyName].length;
-                                }
-                                log(`Total records processed : ${totalRowsFetched}`);
-                                
-                                let action = pageConfig.actions[0];
-                                if(totalRowsFetched>0 && action.type==='code' && action.methodname!==undefined && action.methodname!==null) {
-                                    let methodName = action.methodname;
-                                    log(`Processing : ${methodName} method`);
-
-                                    if(methodName!==undefined && methodName!==null) {
-                                        await action[methodName].call(action, runid);
-                                        log(`${methodName} finished`);
-                                    }
-                                }
-                            }
-                            catch(ep) {
-                                log(ep);
-                            }
-                        }
-                        i++;
-                        //going for next circle
-                        //log('moving to next circle');
-                        log(`${key} crawl process finished. Now saving circle data into table.`);
-                        let impactedRows = metadata.circlecrawlfinished(runid, getStore(), key, function(status) {
-                            log(`Finaliation of ${key} - ${status}`);
-                        });
-                        //log(`Next operation ${i} starting`);
-                    }
-                }
-            }
-
-            await browser.close();
-            log('Operation completed');
-        }
-    }
-    catch(fe) {
-        log(fe);
-    }
-    // finally {
-    //     exhaustSeats4Rest()
-    // }
+    return data;
 }
 
 function transformData(textValue, providedData) {
@@ -1144,67 +875,6 @@ async function getControl(uinput, idx, ctrls) {
     return inputControlItem;
 }
 
-/*helper method */
-async function autoScroll(page){
-    await page.evaluate(async () => {
-        await new Promise((resolve, reject) => {
-            var totalHeight = 0;
-            var distance = 100;
-            var timer = setInterval(() => {
-                var scrollHeight = document.body.scrollHeight;
-                window.scrollBy(0, distance);
-                totalHeight += distance;
-
-                if(totalHeight >= scrollHeight){
-                    clearInterval(timer);
-                    resolve();
-                }
-            }, 100);
-        });
-    });
-}
-
-async function autoScrollToHight(page, hightPercentage){
-    await page.evaluate(async (hp) => {
-        await new Promise((resolve, reject) => {
-            var scrollHeight = 0;
-            if(hp>0)
-                scrollHeight = (document.body.scrollHeight/hp)*100;
-            
-            //console.log('Scrolling ...');
-            if(hp>0)
-                window.scrollBy(0, scrollHeight);
-            else
-                window.scrollTo(0, 0);
-
-            resolve();
-        });
-    }, hightPercentage);
-}
-
-async function setProprtyItem(page, selector, property, value) {
-    await page.evaluate(async (sel, prop, val) => {
-        await new Promise((resolve, reject) => {
-            try
-            {
-                let elm = document.querySelector(sel);
-                if(elm)
-                    elm.style.display = 'none';
-                // if(elm) {
-                //     elm.setProperty('style', 'display: none');
-                // }
-                //window.scrollBy(0, scrollHeight);
-                resolve();
-            }
-            catch(eex) {
-                reject(eex);
-            }
-        });
-    }, selector, property, value);
-}
-
-/*end of helper */
-
 async function performTask(objPage, userInput, inputControl, element, task, idx, runid) {
     try
     {
@@ -1440,55 +1110,18 @@ async function performTask(objPage, userInput, inputControl, element, task, idx,
     return 0;
 }
 
-//jshint ignore:end
-////*[@id="04c6e90faac2675aa89e2176d2eec7d8-4ea1851c99601c376d6e040dd01aedc5dd40213b"]
-//var stdin = process.openStdin();
-//require('tty').setRawMode(true);
-
-// var stdin = process.openStdin();
-// if(stdin.isTTY) {
-//     log('Keypress Event added');
-//     stdin.on("keypress", function(chunk, key) {
-//         log('Chunk : ' + chunk + "\n");
-//         log('Key : ' + key + "\n");
-
-//         if(key && (key.name=='c' || key.name=='C')) {
-//             if(browser) {
-//                 browser.close();
-//             }
-//         }
-//     });
-// }
-
-var excutionStarted = false;
-cron.schedule("*/10 * * * *", function() {
-    log("Cron started");
-    if(excutionStarted) {
-        log('Previous process still running ...');
-        return false;
-    }
-
+async function start() {
     try
     {
         excutionStarted = true;
         capturedData = {};
-        //init_context();
         process.on('unhandledRejection', (reason, promise) => {
-            //log('Unhandled Rejection at:', reason.stack || reason);
             log('Unhandled Rejection at:', reason);
-            // Recommended: send the information to sentry.io
-            // or whatever crash reporting service you use
         });
 
         let runid = `${uuidv4()}_${moment().format("DD-MMM-YYYY HH:mm:ss.SSS")}`;
-        //let crawlingUri = "https://www.neptunenext.com/agent/general/index";
-        //let crawlingUri = "https://airiq.in/Admin/Search.aspx";
-        //let crawlingUri = "https://www.tripmaza.com/App/DealPage2A.aspx";
-        //let crawlingUri = "https://www.tripmaza.com";
-        let crawlingUri = "https://indertours.com/flight.html";
-        // ProcessActivity(crawlingUri, runid).then(()=> {
+        let crawlingUri = "https://www.cheapfixdeparture.com/index.php";
         ProcessActivityV2(crawlingUri, runid).then(()=> {
-            //what to do after the promise being called
             try
             {
                 log('Process completed.');
@@ -1496,13 +1129,11 @@ cron.schedule("*/10 * * * *", function() {
                 process.removeAllListeners("unhandledRejection");
                 process.removeAllListeners('exit');
                 process.removeAllListeners();
-                //process.listeners("unhandledRejection").
             }
             catch(e) {
                 log(e);
             }
             finally {
-                //process.exit(0);
                 excutionStarted = false;
             }
             if(browser) {
@@ -1513,16 +1144,13 @@ cron.schedule("*/10 * * * *", function() {
         }).catch((reason) => {
             log(reason);
             log(JSON.stringify(capturedData));
-            //log('Closing Browser');
-            //page.waitFor(500);
             excutionStarted = false;
-            //browser.close();
         });
     }
     catch(e) {
         log(e);
         excutionStarted = false;
     }
-});
+}
 
-app.listen("3152");
+module.exports = {ProcessActivityV2};

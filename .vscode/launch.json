@@ -149,6 +149,11 @@
             "request": "launch",
             "name": "Crawl API portal",
             "program": "${workspaceFolder}/indexcrawl_api.js"
+        },        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Inder Tours V2 Program",
+            "program": "${workspaceFolder}/indexindrv2.js"
         }
    ]
 }
