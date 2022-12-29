@@ -122,25 +122,55 @@ router.get('/spicejet/:pnr/:email', async function(req, res, next) {
         url =`https://www.spicejet.com/trips/details?pnr=${req.params.pnr}&lastName=${req.params.email}`;
       }
       //var url = `https://www.spicejet.com/trips/details?pnr=${req.params.pnr}&last=${req.params.last}`;
-      var token = await getToken(url, cachedToken);
+      /*
+      // var token = await getToken(url, cachedToken);
 
-      logger.log('info', `Request for Email: ${req.params.email} and PNR: ${req.params.pnr}`);
+      // logger.log('info', `Request for Email: ${req.params.email} and PNR: ${req.params.pnr}`);
 
-      if(!token) {
-        token = cachedToken;
-      }
+      // if(!token) {
+      //   token = cachedToken;
+      // }
 
-      if(token) {
-        cachedToken = token;
-        data = await getFlightStat(token, {pnr: req.params.pnr, email: req.params.email});
-      }
+      // if(token) {
+      //   cachedToken = token;
+      //   data = await getFlightStat(token, {pnr: req.params.pnr, email: req.params.email});
+      // }
+      */
 
+      data = await getSpicejetFlightAPIData(url, req.params.email, req.params.pnr);
       res.status(200).json(data);
     } catch (err) {
       console.error(`Error while getting programming languages `, err.message);
       next(err);
     }
 });
+
+async function getSpicejetFlightAPIData(url, email, pnr) {
+  var data = {};
+  //var payload = req.body;
+
+  try
+  {
+    var token = await getToken(url, cachedToken);
+
+    logger.log('info', `Request for Email: ${email} and PNR: ${pnr}`);
+
+    if(!token) {
+      token = cachedToken;
+    }
+
+    if(token) {
+      cachedToken = token;
+      data = await getFlightStat(token, {pnr: pnr, email: email});
+    }
+  }
+  catch(e) {
+    console.error(`Error while getting programming languages `, err.message);
+    data.message = err.message;
+  }
+
+  return data;
+}
 
 router.get('/spicejetv2/:pnr/:email', async function(req, res, next) {
   log('SpiceJet API process started');
@@ -153,10 +183,21 @@ router.get('/spicejetv2/:pnr/:email', async function(req, res, next) {
           log('Unhandled Rejection at:', reason);
       });
 
+      //get all other data of spicejet via api
+      var url = '';
+      
+      if(req.params.email.trim().indexOf('@')>-1) {
+        url =`https://www.spicejet.com/trips/details?pnr=${req.params.pnr}&email=${req.params.email}`;
+      }
+      else {
+        url =`https://www.spicejet.com/trips/details?pnr=${req.params.pnr}&lastName=${req.params.email}`;
+      }      
+      var sgpnrdata = await getSpicejetFlightAPIData(url, req.params.email, req.params.pnr);
+
       let runid = `${uuidv4()}_${moment().format("DD-MMM-YYYY HH:mm:ss.SSS")}`;
       //let crawlingUri = "https://www.flygofirst.com/";
-      let crawlingUri = `https://book.flygofirst.com/Booking/Retrieve?rl=${req.params.pnr}&ln=${req.params.email}`;
-      goFirstCommonLib.ProcessActivityV2(crawlingUri, {'pnr': req.params.pnr, 'email': req.params.email}, runid).then((data)=> {
+      let crawlingUri = `https://book.spicejet.com/RetrieveBooking.aspx`;
+      spicejetCommonLib.ProcessActivityV2(crawlingUri, {'pnr': req.params.pnr, 'email': req.params.email}, runid).then((data)=> {
           try
           {
               log('Process completed.');
@@ -175,7 +216,15 @@ router.get('/spicejetv2/:pnr/:email', async function(req, res, next) {
               browser.close();
               log('Closing browser');
           }
-          res.status(200).json(data);
+          sgpnrdata.flight_status = data.flightStatus;
+          if(sgpnrdata.remarks) {
+            sgpnrdata.remarks += ' ' + data.remarks;
+          }
+          else {
+            sgpnrdata.remarks = data.remarks;
+          }
+
+          res.status(200).json(sgpnrdata);
       }).catch((reason) => {
           log(reason);
           log(JSON.stringify(capturedData));

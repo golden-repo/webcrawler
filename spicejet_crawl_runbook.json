@@ -11,24 +11,129 @@
 			"actions": [
 				{
 					"name": "index",
-					"codefile": "./cx_gofirst_runbook.js",
+					"codefile": "./cx_spicejet_runbook.js",
 					"properties": [],
 					"tasks": [
 						{
-							"id": 1,
-							"name": "element_present",
+							"id": 10,
+							"name": "read_context_values_to_variable",
 							"parameters": [
-								{"id": 1, "name": "selector", "value": "h3.itin-pnr", "sourcetype": "value", "direction": "input"},
-								{"id": 1, "name": "timeout", "value": "1500", "sourcetype": "value", "direction": "input"},
-								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+								{"id": 1, "name": "email", "value": "${email}", "sourcetype": "variable", "direction": "output"},
+								{"id": 2, "name": "pnr", "value": "${pnr}", "sourcetype": "variable", "direction": "output"}
 							],
 							"connects": [
-								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 2},
-								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 20},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 999}
 							]
 						},
 						{
-							"id": 2,
+							"id": 20,
+							"name": "set_user_input",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#ControlGroupRetrieveBookingView_BookingRetrieveInputRetrieveBookingView_ConfirmationNumber", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "value", "value": "${pnr}", "sourcetype": "variable", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${status} === true", "taskid": 30},
+								{"id": 2, "name": "connect2", "expression": "${status} === false", "taskid": 999}
+							]
+						},
+						{
+							"id": 30,
+							"name": "read_context_values_to_variable",
+							"parameters": [
+								{"id": 1, "name": "email", "value": "${email}", "sourcetype": "variable", "direction": "output"},
+								{"id": 2, "name": "pnr", "value": "${pnr}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 40},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 999}
+							]
+						},						
+						{
+							"id": 40,
+							"name": "set_user_input",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#ControlGroupRetrieveBookingView_BookingRetrieveInputRetrieveBookingView_CONTACTEMAIL1", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "value", "value": "${email}", "sourcetype": "variable", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${status} === true", "taskid": 50},
+								{"id": 2, "name": "connect2", "expression": "${status} === false", "taskid": 999}
+							]
+						},
+						{
+							"id": 50,
+							"name": "click_button",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#ControlGroupRetrieveBookingView_BookingRetrieveInputRetrieveBookingView_ButtonRetrieve", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "timeout", "value": "5000", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 60},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 999}
+							]
+						},						
+						{
+							"id": 60,
+							"name": "element_present",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#flight-journey-detail tr:nth-child(2)", "sourcetype": "value", "direction": "input"},
+								{"id": 1, "name": "timeout", "value": "5000", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 70},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 999}
+							]
+						},
+						{
+							"id": 70,
+							"name": "read_content",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#flight-journey-detail tr:nth-child(2)", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "timeout", "value": "1500", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "content_type", "value": "text", "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 80},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 1000}
+							]
+						},
+						{
+							"id": 80,
+							"name": "parse_content_via_regex",
+							"parameters": [
+								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "content_type", "value": "text", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "regex", "value": "\\b[a-zA-Z0-9: @.]+\\b", "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "output"},
+								{"id": 5, "name": "pnrinfo", "value": "${dataLayer}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 90},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 1000}
+							]
+						},
+						{
+							"id": 90,
+							"name": "prepare_data",
+							"parameters": [
+								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "dataLayer", "value": "${dataLayer}", "sourcetype": "variable", "direction": "input"},
+								{"id": 3, "name": "pnrpayload", "value": "${pnrpayload}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 999},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 1000}
+							]
+						},						
+						{
+							"id": 40,
 							"name": "read_global_variable",
 							"parameters": [
 								{"id": 1, "name": "varname", "value": "dataLayer", "sourcetype": "value", "direction": "input"},
@@ -41,7 +146,7 @@
 							]
 						},
 						{
-							"id": 3,
+							"id": 50,
 							"name": "read_content",
 							"parameters": [
 								{"id": 1, "name": "selector", "value": "div.itin-flights", "sourcetype": "value", "direction": "input"},
@@ -54,7 +159,7 @@
 							]
 						},
 						{
-							"id": 4,
+							"id": 60,
 							"name": "read_content_append",
 							"parameters": [
 								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
@@ -68,7 +173,7 @@
 							]
 						},						
 						{
-							"id": 5,
+							"id": 70,
 							"name": "read_content_append",
 							"parameters": [
 								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
@@ -82,7 +187,7 @@
 							]
 						},						
 						{
-							"id": 6,
+							"id": 80,
 							"name": "parse_content_via_regex",
 							"parameters": [
 								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
@@ -97,7 +202,7 @@
 							]
 						},
 						{
-							"id": 7,
+							"id": 90,
 							"name": "prepare_data",
 							"parameters": [
 								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
@@ -110,7 +215,7 @@
 							]
 						},
 						{
-							"id": 10,
+							"id": 100,
 							"name": "parse_content",
 							"parameters": [
 								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
@@ -299,15 +404,15 @@
 							]
 						},
 						{
-							"id": 19,
+							"id": 999,
 							"name": "close",
 							"parameters": [],
 							"connects": [
-								{"id": 1, "name": "connect1", "expression": "true", "taskid": 100}
+								{"id": 1, "name": "connect1", "expression": "true", "taskid": 1000}
 							]
 						},
 						{
-							"id": 100,
+							"id": 1000,
 							"name": "end",
 							"parameters": [],
 							"connects": []

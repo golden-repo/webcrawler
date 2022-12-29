@@ -119,7 +119,7 @@ async function navigatePageV2(pageName) {
         //log('before launch of browser');
         browser = await puppeteer.launch(
             {
-                headless:true,
+                headless: true,
                 ignoreHTTPSErrors: true,
                 ignoreDefaultArgs: ['--enable-automation'],
                 args: ['--start-fullscreen','--no-sandbox','--disable-setuid-sandbox', '--disable-gpu'],
@@ -341,9 +341,6 @@ function getActionExecutor(context, action=null, task_info=null, callback) {
 function load_rb_config(tenantname='') {
     var rb_file_name = '';
     switch (tenantname) {
-        case 'gofirst':
-            rb_file_name = './gofirst_crawl_runbook.json';
-            break;
         case 'spicejet':
             rb_file_name = './spicejet_crawl_runbook.json';
             break;

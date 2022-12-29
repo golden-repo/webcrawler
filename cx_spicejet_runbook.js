@@ -15,6 +15,18 @@ class CheapPortal_Crawl {
     /*
 
     */
+    async tx_read_context_values_to_variable(taskinfo) {
+        const payload = this.context.getContextData('payload');
+
+        this.output_parameters.email = payload.email;
+        this.output_parameters.pnr = payload.pnr;
+
+        return true;
+    }
+
+    /*
+
+    */
     async tx_set_user_input(taskinfo) {
         // const page = this.context.getContextData('page');
         //var params = this.hlp_get_passed_parameters(taskinfo);
@@ -49,6 +61,7 @@ class CheapPortal_Crawl {
         //     flag = false;
         // });
         var waitOptions = {waitUntil: 'domcontentloaded', timeout: timeout};
+        //var waitOptions = {waitUntil: 'domcontentloaded', timeout: timeout};
         var element = await this.page.$(selector).catch(reason => {
             console.log(`E111 => ${reason}`);
         });
@@ -63,11 +76,11 @@ class CheapPortal_Crawl {
                 flag = false;
             }),
 
-            this.page.waitForNavigation(waitOptions).catch(async (reason) => {
-                this.log('error', `Error (button click) => ${reason}`);
-                console.log('error', `Error (button click) => ${reason}`);
-                await this.page.screenshot({path: `gofirst-${time}.png`});
-            })
+            // this.page.waitForNavigation(waitOptions).catch(async (reason) => {
+            //     this.log('error', `Error (button click) => ${reason}`);
+            //     console.log('error', `Error (button click) => ${reason}`);
+            //     //await this.page.screenshot({path: `spicejet-${time}.png`});
+            // })
         ]);
 
         //await this.page.$eval(selector, element => element.click());
@@ -77,7 +90,7 @@ class CheapPortal_Crawl {
         //     console.log('error', `Error (button click) => ${reason}`);
         // });
 
-        await this.page.screenshot({path: `last-gofirst-${time}.png`});
+        //await this.page.screenshot({path: `last-gofirst-${time}.png`});
 
         return flag;
     }
@@ -163,11 +176,13 @@ class CheapPortal_Crawl {
         var element_loaded = true;
 
         var selector = this.input_parameters.selector;
+        var timeout = this.input_parameters.timeout ? parseInt(this.input_parameters.timeout, 10) : 1500;
+
         var content_type = this.input_parameters.content_type;
         if(!content_type) {
             content_type = 'html';
         }
-        await this.page.waitForSelector(selector).catch(reason => {
+        await this.page.waitForSelector(selector, {timeout: timeout}).catch(reason => {
             console.log(`E16 => ${reason}`);
             element_loaded = false;
         });
@@ -244,9 +259,9 @@ class CheapPortal_Crawl {
     async tx_parse_content_via_regex(taskinfo) {
         var flag = true;
         var content = this.input_parameters.content.trim();
-        var content_type = this.input_parameters.content_type;
-        var regex = new RegExp(this.input_parameters.regex, 'gi');
-        var items = [];
+        // var content_type = this.input_parameters.content_type;
+        // var regex = new RegExp(this.input_parameters.regex, 'gi');
+        var items = content.trim().split("\t");
 
         //this.log('info', `Content to parse => ${content}`);
         //var clear_html_regex = /(<([^>]+)>)/ig;
@@ -259,7 +274,7 @@ class CheapPortal_Crawl {
         
         try
         {
-            items = content.match(regex);
+            //items = content.match(regex);
         }
         catch(e) {
             this.log('error', `${e}`);
@@ -295,51 +310,58 @@ class CheapPortal_Crawl {
         var dataLayer = this.input_parameters.dataLayer;
         var data = {};
 
-        if(content !== undefined && Array.isArray(content)) {
-            if(content[0] == 'You have been successfully checked') {
-                //Already travelled
-                content = content.splice(2);
-            }
-            else if(content[1] == 'No flights are added to this itinerary') {
-                content = ["NA", "01 Jan 2000", "NA", "NA", "NA", "00:00", "NA", "NA", "00:00", "0 Adults", "XXXX", content[2], content[3]];
-            }
-
-            data = Object.assign(data, {
-                "flightno": content[0],
-                "departure_time": moment(`${content[1]} ${content[5]}`, "DD MMM YYYY H:m").utcOffset('+5:30').format('YYYY-MM-DD HH:mm'),
-                "arrival_time": moment(`${content[1]} ${content[8]}`, "DD MMM YYYY H:m").utcOffset('+5:30').format('YYYY-MM-DD HH:mm'),
-                "departure_city": content[4],
-                "arrival_city": content[7],
-                "duration": content[6],
-                "contact": {
-                    'phone': content[11].toLowerCase().replace('contact:', '').trim(),
-                    'email': content[12].toLowerCase().replace('emailid:', '').trim(),
-                }
-            });
+        if(content !== undefined && Array.isArray(content) && content.length>5) {
+            data = {'flightStatus': content[6].trim(), 'remarks': null};
+        }
+        else {
+            data = {'flightStatus': 'Cancelled', 'remarks': 'No flight information present'};
         }
 
-        if(dataLayer !== undefined && typeof dataLayer === 'object') {
-            var product = (dataLayer.ecommerce.purchase.products && dataLayer.ecommerce.purchase.products.length>0) ? dataLayer.ecommerce.purchase.products[0] : null;
-            var item = (dataLayer.ecommerce.purchase.items && dataLayer.ecommerce.purchase.items.length>0) ? dataLayer.ecommerce.purchase.items[0] : null;
+        // if(content !== undefined && Array.isArray(content)) {
+        //     if(content[0] == 'You have been successfully checked') {
+        //         //Already travelled
+        //         content = content.splice(2);
+        //     }
+        //     else if(content[1] == 'No flights are added to this itinerary') {
+        //         content = ["NA", "01 Jan 2000", "NA", "NA", "NA", "00:00", "NA", "NA", "00:00", "0 Adults", "XXXX", content[2], content[3]];
+        //     }
 
-            data = Object.assign(data, {
-                "triptype": dataLayer.trip_type,
-                "currency": dataLayer.currency,
-                //"bill_amount": parseFloat(dataLayer.value),
-                "total_pax": parseInt(dataLayer.passengers_total, 10),
-                "PNR": dataLayer.ecommerce.purchase.actionField.id,
-                //"penidng_amount": parseFloat(dataLayer.ecommerce.purchase.actionField.revenue),
-                "payment_due": parseFloat(dataLayer.ecommerce.purchase.actionField.revenue)>0,
-                "flightno": product ? product.id : data.flightno,
-                "sector": product ? product.name : null,
-                //"price_per_pax": product ? parseFloat(product.price) : 0,
-                //"price_per_pax": product ? parseFloat(product.price) : 0,
-                //"pax_varient": product ? product.varient : "adult",
-                "origin": item ? item.origin : null,
-                "destination": item ? item.destination : null,
-                "start_date": item ? moment(item.start_date).utcOffset('+5:30').format('YYYY-MM-DD') : null,
-            });
-        }
+        //     data = Object.assign(data, {
+        //         "flightno": content[0],
+        //         "departure_time": moment(`${content[1]} ${content[5]}`, "DD MMM YYYY H:m").utcOffset('+5:30').format('YYYY-MM-DD HH:mm'),
+        //         "arrival_time": moment(`${content[1]} ${content[8]}`, "DD MMM YYYY H:m").utcOffset('+5:30').format('YYYY-MM-DD HH:mm'),
+        //         "departure_city": content[4],
+        //         "arrival_city": content[7],
+        //         "duration": content[6],
+        //         "contact": {
+        //             'phone': content[11].toLowerCase().replace('contact:', '').trim(),
+        //             'email': content[12].toLowerCase().replace('emailid:', '').trim(),
+        //         }
+        //     });
+        // }
+
+        // if(dataLayer !== undefined && typeof dataLayer === 'object') {
+        //     var product = (dataLayer.ecommerce.purchase.products && dataLayer.ecommerce.purchase.products.length>0) ? dataLayer.ecommerce.purchase.products[0] : null;
+        //     var item = (dataLayer.ecommerce.purchase.items && dataLayer.ecommerce.purchase.items.length>0) ? dataLayer.ecommerce.purchase.items[0] : null;
+
+        //     data = Object.assign(data, {
+        //         "triptype": dataLayer.trip_type,
+        //         "currency": dataLayer.currency,
+        //         //"bill_amount": parseFloat(dataLayer.value),
+        //         "total_pax": parseInt(dataLayer.passengers_total, 10),
+        //         "PNR": dataLayer.ecommerce.purchase.actionField.id,
+        //         //"penidng_amount": parseFloat(dataLayer.ecommerce.purchase.actionField.revenue),
+        //         "payment_due": parseFloat(dataLayer.ecommerce.purchase.actionField.revenue)>0,
+        //         "flightno": product ? product.id : data.flightno,
+        //         "sector": product ? product.name : null,
+        //         //"price_per_pax": product ? parseFloat(product.price) : 0,
+        //         //"price_per_pax": product ? parseFloat(product.price) : 0,
+        //         //"pax_varient": product ? product.varient : "adult",
+        //         "origin": item ? item.origin : null,
+        //         "destination": item ? item.destination : null,
+        //         "start_date": item ? moment(item.start_date).utcOffset('+5:30').format('YYYY-MM-DD') : null,
+        //     });
+        // }
 
         this.context.setContextData('pnrpayload', data);
         this.output_parameters.pnrpayload = data;
