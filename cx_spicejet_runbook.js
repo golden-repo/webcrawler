@@ -311,10 +311,15 @@ class CheapPortal_Crawl {
         var data = {};
 
         if(content !== undefined && Array.isArray(content) && content.length>5) {
-            data = {'flightStatus': content[6].trim(), 'remarks': "Current flight status cancelled"};
+            let remarks = 'Flight details retrived';
+            if(content[6].trim().toLowerCase() == 'cancelled') //Cancelled
+            {
+                remarks = "PNR Cancelled";
+            }
+            data = {'flightStatus': content[6].trim(), 'remarks': remarks};
         }
         else {
-            data = {'flightStatus': 'Cancelled', 'remarks': "PNR Cancelled"};
+            data = {'flightStatus': 'Unknown', 'remarks': "PNR Not Retrived"};
         }
 
         // if(content !== undefined && Array.isArray(content)) {
