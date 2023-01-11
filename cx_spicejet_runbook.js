@@ -311,7 +311,7 @@ class CheapPortal_Crawl {
         var data = {};
 
         if(content !== undefined && Array.isArray(content) && content.length>5) {
-            let remarks = 'Flight details retrived';
+            let remarks = 'Flight details retrieved';
             if(content[6].trim().toLowerCase() == 'cancelled') //Cancelled
             {
                 remarks = "PNR Cancelled";
@@ -319,7 +319,7 @@ class CheapPortal_Crawl {
             data = {'flightStatus': content[6].trim(), 'remarks': remarks};
         }
         else {
-            data = {'flightStatus': 'Unknown', 'remarks': "PNR Not Retrived"};
+            data = {'flightStatus': 'Unknown', 'remarks': "PNR Not retrieved"};
         }
 
         // if(content !== undefined && Array.isArray(content)) {

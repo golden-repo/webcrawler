@@ -403,7 +403,7 @@ function getNextActionTask(context, action = null, taskinfo = null) {
 }
 
 async function ProcessActivityV2(targetUri, payload, runid=uuid5()) {
-    var data = {};
+    var data = null;
 
     try
     {

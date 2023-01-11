@@ -315,7 +315,7 @@ class CheapPortal_Crawl {
                     'phone': content[11].toLowerCase().replace('contact:', '').trim(),
                     'email': content[12].toLowerCase().replace('emailid:', '').trim(),
                 },
-                "remarks": "flight details retrieved" //content[13]
+                "remarks": content[13]
             });
         }
 

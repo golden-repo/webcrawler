@@ -216,12 +216,14 @@ router.get('/spicejetv2/:pnr/:email', async function(req, res, next) {
               browser.close();
               log('Closing browser');
           }
-          sgpnrdata.flight_status = data.flightStatus;
-          if(sgpnrdata.remarks) {
-            sgpnrdata.remarks += ' ' + data.remarks;
-          }
-          else {
-            sgpnrdata.remarks = data.remarks;
+          if(data) {
+            sgpnrdata.flight_status = data.flightStatus || 'Unknown';
+            if(sgpnrdata.remarks) {
+              sgpnrdata.remarks += ' ' + data.remarks;
+            }
+            else {
+              sgpnrdata.remarks = 'PNR Not Retrived';
+            }
           }
 
           res.status(200).json(sgpnrdata);
@@ -399,6 +401,32 @@ router.get('/gofirst/:pnr/:email', async function(req, res, next) {
               browser.close();
               log('Closing browser');
           }
+
+          if(data == null || data == undefined) {
+            data = {
+              "flightno": "NA",
+              "departure_time": "2000-01-01 00:00",
+              "arrival_time": "2000-01-01 00:00",
+              "departure_city": "NA",
+              "arrival_city": "NA",
+              "duration": "NA",
+              "contact": {
+                  "phone": "NA",
+                  "email": req.params.email
+              },
+              "remarks": "PNR Not Retrieved",
+              "triptype": "NA",
+              "currency": "INR",
+              "total_pax": 0,
+              "PNR": req.params.pnr,
+              "payment_due": false,
+              "sector": null,
+              "origin": null,
+              "destination": null,
+              "start_date": null
+          };
+        }
+
           res.status(200).json(data);
       }).catch((reason) => {
           log(reason);
