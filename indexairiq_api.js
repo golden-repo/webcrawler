@@ -222,7 +222,12 @@ router.get('/spicejetv2/:pnr/:email', async function(req, res, next) {
               sgpnrdata.remarks += ' ' + data.remarks;
             }
             else {
-              sgpnrdata.remarks = 'PNR Not Retrived';
+              if(sgpnrdata.flight_status == 'Unknown') {
+                sgpnrdata.remarks = 'PNR Not Retrived';
+              }
+              else {
+                sgpnrdata.remarks = 'Flight details retrieved';
+              }
             }
           }
 
@@ -426,8 +431,11 @@ router.get('/gofirst/:pnr/:email', async function(req, res, next) {
               "start_date": null
           };
         }
+        else {
+          data.remarks = data.remarks || 'Flight details retrieved';
+        }
 
-          res.status(200).json(data);
+        res.status(200).json(data);
       }).catch((reason) => {
           log(reason);
           log(JSON.stringify(capturedData));

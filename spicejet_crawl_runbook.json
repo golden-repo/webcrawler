@@ -82,11 +82,11 @@
 							"name": "element_present",
 							"parameters": [
 								{"id": 1, "name": "selector", "value": "#flight-journey-detail tr:nth-child(2)", "sourcetype": "value", "direction": "input"},
-								{"id": 1, "name": "timeout", "value": "6000", "sourcetype": "value", "direction": "input"},
+								{"id": 1, "name": "timeout", "value": "8000", "sourcetype": "value", "direction": "input"},
 								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
 							],
 							"connects": [
-								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 1000},
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 70},
 								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 999}
 							]
 						},
@@ -95,7 +95,7 @@
 							"name": "read_content",
 							"parameters": [
 								{"id": 1, "name": "selector", "value": "#flight-journey-detail tr:nth-child(2)", "sourcetype": "value", "direction": "input"},
-								{"id": 2, "name": "timeout", "value": "6000", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "timeout", "value": "8000", "sourcetype": "value", "direction": "input"},
 								{"id": 3, "name": "content_type", "value": "text", "sourcetype": "value", "direction": "input"},
 								{"id": 4, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "output"}
 							],
