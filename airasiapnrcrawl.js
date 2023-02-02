@@ -105,7 +105,7 @@ function prepareFlightStatData(responsePayload) {
             result.pax = (responsePayload.passengers && responsePayload.passengers.length > 0) ? responsePayload.passengers.length : 0;
             result.fligtno = segment && segment.flightReference ? segment.flightReference.substring(9, segment.flightReference.length-7).trim() : null;
             result.fligtno = result.fligtno ? result.fligtno.replace(' ', '-').trim() : '';
-            result.remarks = (responsePayload.info && responsePayload.info.status == 3) ? "Booking cancelled or flight has been cancelled" : 'flight details retrieved';
+            result.remarks = (responsePayload.info && responsePayload.info.status == 3) ? "PNR Not retrieved" : 'flight details retrieved';
         }
         catch(ex) {
             result.error = ex.message;

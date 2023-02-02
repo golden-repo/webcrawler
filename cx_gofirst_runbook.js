@@ -315,7 +315,7 @@ class CheapPortal_Crawl {
                     'phone': content[11].toLowerCase().replace('contact:', '').trim(),
                     'email': content[12].toLowerCase().replace('emailid:', '').trim(),
                 },
-                "remarks": 'Flight details retrieved' //content[13]
+                "remarks": content[0] == 'NA' ? 'PNR Not retrieved' : 'Flight details retrieved' //content[13]
             });
         }
 

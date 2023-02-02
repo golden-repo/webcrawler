@@ -207,6 +207,51 @@ function getCurrentFinancialYear() {
     return fiscalyear;
 }
 
+function getEmployeeSyncConfig(payload) {
+    let configData = {};
+    if(payload) {
+        configData = payload || {
+            "financialYear": "",
+            "fin_start_date": "",
+            "fin_end_date": "",
+            "planned": {
+                "april": false,
+                "may": false,
+                "june": false,
+                "july": false,
+                "august": false,
+                "september": false,
+                "october": false,
+                "november": false,
+                "december": false,
+                "january": false,
+                "february": false,
+                "march": false
+            },
+            "achived": {
+                "april": false,
+                "may": false,
+                "june": false,
+                "july": false,
+                "august": false,
+                "september": false,
+                "october": false,
+                "november": false,
+                "december": false,
+                "january": false,
+                "february": false,
+                "march": false
+            }
+        };
+    }
+
+    return configData;
+}
+
+function saveEmployeeSyncConfig(config) {
+
+}
+
 class ActivityDTO {
     employeeId;
     activityId;
@@ -289,4 +334,5 @@ class ActivityItemDTO {
     }
 }
 
-module.exports = {ActivityDTO, ActivityItemDTO, saveActivityByEployee, prepareActivityPayload, getEmployeeCSRActivities, getEmployees, getEmployeeCSRSyncStatus, getCurrentFinancialYear};
+module.exports = {ActivityDTO, ActivityItemDTO, saveActivityByEployee, prepareActivityPayload, getEmployeeCSRActivities, getEmployees, 
+    getEmployeeCSRSyncStatus, getCurrentFinancialYear, getEmployeeSyncConfig, saveEmployeeSyncConfig};

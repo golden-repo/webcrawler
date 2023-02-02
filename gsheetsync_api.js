@@ -140,6 +140,26 @@ router.get('/gsheetsync/employees/syncstatus/:startdate?/:enddate?', async funct
     }
 });
 
+router.post('/gsheetsync/employees/config', async function(req, res, next) {
+    log('GSheet employee config sync api');
+    let configPayload = req.body;
+
+    try
+    {
+        let activityPayload = await activityProcessorLibrary.getEmployeeSyncConfig(configPayload);
+        console.log(`Activity payload : ${JSON.stringify(activityPayload)}`);
+        
+        var employee = await activityProcessorLibrary.saveEmployeeSyncConfig(configPayload);
+
+        console.log(`Employee -> ${JSON.stringify(employee)}`);
+        res.status(200).json(activityPayload);
+    }
+    catch(e) {
+        log(e);
+        next(e);
+    }
+});
+
 //common code
 app.use('/api', router);
 
