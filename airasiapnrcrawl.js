@@ -152,13 +152,13 @@ async function searchPNR(pnr, additionalData) {
           data = await prepareFlightStatData(data);
         }
         else {
-            data = {'remarks': 'PNR not retrived'};
+            data = {'remarks': 'PNR not retrieved'};
         }
     })
     .catch(reason => {
         console.log(`Error -> ${reason}`);
         flag = false;
-        data = {'remarks': 'PNR not retrived'};
+        data = {'remarks': 'PNR not retrieved'};
     });  
   
     return data;  

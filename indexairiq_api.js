@@ -223,7 +223,7 @@ router.get('/spicejetv2/:pnr/:email', async function(req, res, next) {
             }
             else {
               if(sgpnrdata.flight_status == 'Unknown') {
-                sgpnrdata.remarks = 'PNR Not Retrived';
+                sgpnrdata.remarks = 'PNR Not Retrieved';
               }
               else {
                 sgpnrdata.remarks = 'Flight details retrieved';
