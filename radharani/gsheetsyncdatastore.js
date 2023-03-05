@@ -23,28 +23,28 @@ function getDBPool() {
     //     port: 3306
     // });
 
+    // pool = mysql.createPool({
+    //     connectionLimit : 2,
+    //     connectTimeout  : 60 * 60 * 1000,
+    //     acquireTimeout  : 60 * 60 * 1000,
+    //     timeout         : 60 * 60 * 1000,        
+    //     host: "localhost",
+    //     user: "root",
+    //     password: "",
+    //     database: "csr_tracker",
+    //     port: 3306
+    // });
+
+    // //Remote DB
     pool = mysql.createPool({
-        connectionLimit : 2,
-        connectTimeout  : 60 * 60 * 1000,
-        acquireTimeout  : 60 * 60 * 1000,
-        timeout         : 60 * 60 * 1000,        
-        host: "localhost",
-        user: "root",
-        password: "",
+        connectionLimit: 2,
+        connectTimeout: 15000,
+        host: "www.oxytra.com",
+        user: "csr_user",
+        password: "csrUser@2023",
         database: "csr_tracker",
         port: 3306
     });
-
-    // //Remote DB
-    // pool = mysql.createPool({
-    //     connectionLimit: 2,
-    //     connectTimeout: 15000,
-    //     host: "www.oxytra.com",
-    //     user: "oxyusr",
-    //     password: "oxy@321-#",
-    //     database: "oxytra",
-    //     port: 3306
-    // });
 
     //New production
     // pool = mysql.createPool({
@@ -1199,6 +1199,128 @@ function transformEmployeeRecord(employeeRecord) {
     return employee;
 }
 
+async function saveEmployeeConfig(config) {
+    var plannedSql = null;
+    var achivedSql = null;
+    var employeeCSRRecord = null;
+    let plannedConfig = config.planned;
+    let achivedConfig = config.achived;
+
+    var configData = await getConfigByFinYear(config.finyear);
+
+    if(configData && configData.length>0) {
+        let finYear = configData[0].finyear;
+        plannedSql = `update config_tbl set apr=${plannedConfig.april}, may=${plannedConfig.may}, jun=${plannedConfig.june}, jul=${plannedConfig.july}, aug=${plannedConfig.august}, sep=${plannedConfig.september}, 
+            oct=${plannedConfig.october}, nov=${plannedConfig.november}, \`dec\`=${plannedConfig.december}, jan=${plannedConfig.january}, feb=${plannedConfig.february}, mar=${plannedConfig.march}, 
+            updated_on = current_timestamp() where finyear='${finYear}' and category='planned'`;
+
+        achivedSql = `update config_tbl set apr=${achivedConfig.april}, may=${achivedConfig.may}, jun=${achivedConfig.june}, jul=${achivedConfig.july}, aug=${achivedConfig.august}, sep=${achivedConfig.september}, 
+            oct=${achivedConfig.october}, nov=${achivedConfig.november}, \`dec\`=${achivedConfig.december}, jan=${achivedConfig.january}, feb=${achivedConfig.february}, mar=${achivedConfig.march}, 
+            updated_on = current_timestamp() where finyear='${finYear}' and category='achived'`;
+    }
+    else {
+        let finYear = config.finyear;
+        let finStartDate = config.fin_start_date;
+        let finEndDate = config.fin_end_date;
+
+        plannedSql = `insert into config_tbl(finyear, fin_start_date, fin_end_date, category, apr, may, jun, jul, aug, sep, oct, nov, \`dec\`, jan, feb, mar, created_on)
+            values('${finYear}', '${finStartDate}', '${finEndDate}', 'planned', ${plannedConfig.april}, ${plannedConfig.may}, ${plannedConfig.june}, 
+            ${plannedConfig.july}, ${plannedConfig.august}, ${plannedConfig.september}, ${plannedConfig.october}, ${plannedConfig.november}, ${plannedConfig.december}, 
+            ${plannedConfig.january}, ${plannedConfig.february}, ${plannedConfig.march}, now())`;
+
+        achivedSql = `insert into config_tbl(finyear, fin_start_date, fin_end_date, category, apr, may, jun, jul, aug, sep, oct, nov, \`dec\`, jan, feb, mar, created_on)
+            values('${finYear}', '${finStartDate}', '${finEndDate}', 'achived', ${achivedConfig.april}, ${achivedConfig.may}, ${achivedConfig.june}, 
+            ${achivedConfig.july}, ${achivedConfig.august}, ${achivedConfig.september}, ${achivedConfig.october}, ${achivedConfig.november}, ${achivedConfig.december}, 
+            ${achivedConfig.january}, ${achivedConfig.february}, ${achivedConfig.march}, now())`;
+    }
+ 
+    if(plannedSql && achivedSql) {
+        plannedRecord = await executeNonQuery(plannedSql);
+        achivedRecord = await executeNonQuery(achivedSql);
+    }
+
+    return {'planned': plannedRecord, 'achived': achivedRecord};
+}
+
+async function getConfigByFinYear(finyear) {
+    var configs = null;
+    if(finyear == null || finyear == '' || finyear == undefined) return;
+
+    var sql = `select * from config_tbl where finyear='${finyear}'`;
+ 
+    configs = await executeQuery(sql);
+
+    return configs;
+}
+
+async function getEmployeeByInfo(employeeinfo) {
+    //var connection = await getDBConnection();
+    var employee = null;
+    var sql = null;
+
+    if(employeeinfo && employeeinfo.code && employeeinfo.code !== '') {
+        sql = `select * from employees_tbl where code = '${employeeinfo.code}'`;
+    }
+    else if(employeeinfo && employeeinfo.id > 0) {
+        sql = `select * from employees_tbl where id = ${employeeinfo.id}`;
+    }
+ 
+    if(sql) {
+        var employeeRecord = await executeQuery(sql);
+        if(employeeRecord && Array.isArray(employeeRecord) && employeeRecord[0]) {
+            console.log(`Employee Record : ${JSON.stringify(employeeRecord[0])}`);
+            employee = transformEmployeeRecord(employeeRecord[0]);
+        }
+    }
+
+    return employee;
+}
+
+async function saveEmployees(employees) {
+    let results = [];
+    if(employees && employees.length>0) {
+        for (let index = 0; index < employees.length; index++) {
+            let employee = employees[index];
+            let existingEmployee = await getEmployeeByInfo(employee);
+            if(existingEmployee && existingEmployee.id>0) {
+                let result = await updateEmployee(employee);
+                results.push(result);
+            }
+            else {
+                let result = await insertEmployee(employee);
+                results.push(result);
+            }
+        }
+    }
+
+    return results
+}
+
+async function insertEmployee(employee) {
+    let code = (employee.code !== '') ? employee.code : null;
+
+    if(code) {
+        achivedSql = `insert into employees_tbl(name, code, location, created_on, status)
+        values('${employee.name}', '${employee.code}', '${employee.location}', now(), 1)`;
+    }
+    else {
+        achivedSql = `insert into employees_tbl(name, code, location, created_on, status)
+        values('${employee.name}', uuid(), '${employee.location}', now(), 1)`;
+    }
+
+    let plannedRecord = await executeNonQuery(achivedSql);
+
+    return plannedRecord;
+}
+
+async function updateEmployee(employee) {
+    achivedSql = `update employees_tbl set name='${employee.name}', location='${employee.location}', updated_on=now(), status=1 where code='${employee.code}'`;
+
+    let plannedRecord = await executeNonQuery(achivedSql);
+
+    return plannedRecord;
+}
+
 //jshint ignore:end
 
-module.exports = {saveActivitiesByEmployee, getEmployee, getActivities, getEmployeeCSRActivities, getEmployees, getEmployeeCSRSyncStatus};
+module.exports = {saveActivitiesByEmployee, getEmployee, getActivities, getEmployeeCSRActivities, getEmployees, getEmployeeCSRSyncStatus, saveEmployeeConfig, getConfigByFinYear, saveEmployees};

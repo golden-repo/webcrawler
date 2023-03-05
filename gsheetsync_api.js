@@ -23,7 +23,7 @@ const logger = require('./src/common/logger').Logger;
 logger.init('gsheetsyncapi');
 
 app = express();
-const port = 7171;
+const port = 7272;
 const TIMEOUT = 10000; //6000;
 const POSTBACK_TIMEOUT = 12000; //8000
 const POLLINGDELAY = 100;
@@ -123,6 +123,27 @@ router.get('/gsheetsync/employees', async function(req, res, next) {
     }
 });
 
+router.post('/gsheetsync/employees', async function(req, res, next) {
+    log('Post employees');
+    let employees = req.body;
+    var employeeList = [];
+
+    try
+    {
+        if(employees && employees.length>0) {
+            console.log(`Employees payload : ${JSON.stringify(employees)}`);
+            
+            employeeList = await activityProcessorLibrary.saveEmployees(employees);
+        }
+
+        res.status(200).json(employeeList);
+    }
+    catch(e) {
+        log(e);
+        next(e);
+    }
+});
+
 router.get('/gsheetsync/employees/syncstatus/:startdate?/:enddate?', async function(req, res, next) {
     log('Get employees');
     let startdate = req.params.startdate;
@@ -153,6 +174,24 @@ router.post('/gsheetsync/employees/config', async function(req, res, next) {
 
         console.log(`Employee -> ${JSON.stringify(employee)}`);
         res.status(200).json(activityPayload);
+    }
+    catch(e) {
+        log(e);
+        next(e);
+    }
+});
+
+router.get('/gsheetsync/employees/config/:finyear?', async function(req, res, next) {
+    log('GSheet employee config sync api : GET');
+    //let configPayload = req.body;
+    let finyear = req.params.finyear;
+
+    try
+    {
+        var configData = await activityProcessorLibrary.getEmployeeSyncConfigData(finyear);
+
+        console.log(`ConfigData -> ${JSON.stringify(configData)}`);
+        res.status(200).json(configData);
     }
     catch(e) {
         log(e);

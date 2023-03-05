@@ -129,7 +129,7 @@ async function saveActivityByEployee(employeeid, activities) {
         for (let index = 0; index < activities.length; index++) {
             const activity = activities[index];
             if(activity && activity.activityName !== undefined && activity.activityName !== '') {
-                activityItem = activityList.find(act => act.activity_name.toLowerCase() == activity.activityName.toLowerCase());
+                activityItem = activityList.find(act => act.activity_code.toLowerCase() == activity.activityName.toLowerCase());
                 if(activityItem && activityItem.id>0) {
                     activity.activityId = activityItem.id;
                     activity.activity_name = activityItem.activity_name;
@@ -184,6 +184,15 @@ async function getEmployees() {
     return employee;
 }
 
+async function saveEmployees(employees) {
+    let employeeList = null;
+    if(employees && employees.length>0) {
+        employeeList = await datastore.saveEmployees(employees);
+    }
+
+    return employeeList;
+}
+
 async function getEmployeeCSRSyncStatus(startDate, endDate) {
     if(startDate == null || endDate == null || startDate == undefined || startDate == '' || endDate == undefined || endDate == '') {
         let finYear = getCurrentFinancialYear();
@@ -211,7 +220,7 @@ function getEmployeeSyncConfig(payload) {
     let configData = {};
     if(payload) {
         configData = payload || {
-            "financialYear": "",
+            "finyear": "",
             "fin_start_date": "",
             "fin_end_date": "",
             "planned": {
@@ -248,8 +257,60 @@ function getEmployeeSyncConfig(payload) {
     return configData;
 }
 
-function saveEmployeeSyncConfig(config) {
+async function saveEmployeeSyncConfig(config) {
+    let employeeConfigData = null;
+    let employeeConfig = getEmployeeSyncConfig(config);
+    if(employeeConfig) {
+        employeeConfigData = await datastore.saveEmployeeConfig(config);
+    }
 
+    return employeeConfigData;
+}
+
+async function getEmployeeSyncConfigData(finyear) {
+    if(finyear === null || finyear === undefined || finyear === '') return;
+
+    let employeeConfigData = await datastore.getConfigByFinYear(finyear);
+    let configDataItem = null;
+
+    for(idx = 0; idx < employeeConfigData.length; idx++) {
+        let configData = employeeConfigData[idx];
+        configDataItem = configDataItem || {'finyear': configData.finyear, 'fin_start_date': moment(configData.fin_start_date).format('YYYY-MM-DD HH:mm:ss'), 'fin_end_date': moment(configData.fin_end_date).format('YYYY-MM-DD HH:mm:ss')}
+        if(configData && configData.category === 'planned') {
+            configDataItem.planned = {
+                "april": configData.apr == 1,
+                "may": configData.may == 1,
+                "june": configData.jun == 1,
+                "july": configData.jul == 1,
+                "august": configData.aug == 1,
+                "september": configData.sep == 1,
+                "october": configData.oct == 1,
+                "november": configData.nov == 1,
+                "december": configData.dec == 1,
+                "january": configData.jan == 1,
+                "february": configData.feb == 1,
+                "march": configData.mar == 1
+            }
+        }
+        else if(configData && configData.category === 'achived') {
+            configDataItem.achived = {
+                "april": configData.apr == 1,
+                "may": configData.may == 1,
+                "june": configData.jun == 1,
+                "july": configData.jul == 1,
+                "august": configData.aug == 1,
+                "september": configData.sep == 1,
+                "october": configData.oct == 1,
+                "november": configData.nov == 1,
+                "december": configData.dec == 1,
+                "january": configData.jan == 1,
+                "february": configData.feb == 1,
+                "march": configData.mar == 1
+            }
+        }
+    }
+
+    return configDataItem;
 }
 
 class ActivityDTO {
@@ -335,4 +396,4 @@ class ActivityItemDTO {
 }
 
 module.exports = {ActivityDTO, ActivityItemDTO, saveActivityByEployee, prepareActivityPayload, getEmployeeCSRActivities, getEmployees, 
-    getEmployeeCSRSyncStatus, getCurrentFinancialYear, getEmployeeSyncConfig, saveEmployeeSyncConfig};
+    getEmployeeCSRSyncStatus, getCurrentFinancialYear, getEmployeeSyncConfig, saveEmployeeSyncConfig, getEmployeeSyncConfigData, saveEmployees};
