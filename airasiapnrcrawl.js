@@ -121,7 +121,8 @@ async function searchPNR(pnr, additionalData) {
     var subscription = getSubscription();
 
     //let url = `https://api.airasia.co.in/b2c-CheckIn/v2/check-in/retrieve/byRecordLocator`;
-    let url = `https://api.airasia.co.in/b2c-CheckIn/v2/mmb/retrieve/byRecordLocator`;
+    //let url = `https://api.airasia.co.in/b2c-CheckIn/v2/mmb/retrieve/byRecordLocator`;
+    let url = `https://api.airasia.co.in/b2c-CheckIn/v2/check-in/retrieve/byRecordLocator`;
   
     await fetch(url, {
       method: 'POST',
