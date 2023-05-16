@@ -114,7 +114,7 @@ router.get('/gsheetsync/employees', async function(req, res, next) {
     try
     {
         var employees = await activityProcessorLibrary.getEmployees();
-
+        log(`Response feed => ${JSON.stringify(employees)}`);
         res.status(200).json(employees);
     }
     catch(e) {

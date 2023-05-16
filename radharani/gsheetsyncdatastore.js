@@ -36,12 +36,22 @@ function getDBPool() {
     // });
 
     // //Remote DB
+    // pool = mysql.createPool({
+    //     connectionLimit: 2,
+    //     connectTimeout: 15000,
+    //     host: "www.oxytra.com",
+    //     user: "csr_user",
+    //     password: "csrUser@2023",
+    //     database: "csr_tracker",
+    //     port: 3306
+    // });
+
     pool = mysql.createPool({
         connectionLimit: 2,
         connectTimeout: 15000,
-        host: "www.oxytra.com",
-        user: "csr_user",
-        password: "csrUser@2023",
+        host: "172.16.8.55",
+        user: "himadrim",
+        password: "Himadri@2023",
         database: "csr_tracker",
         port: 3306
     });
@@ -1300,12 +1310,12 @@ async function insertEmployee(employee) {
     let code = (employee.code !== '') ? employee.code : null;
 
     if(code) {
-        achivedSql = `insert into employees_tbl(name, code, location, created_on, status)
-        values('${employee.name}', '${employee.code}', '${employee.location}', now(), 1)`;
+        achivedSql = `insert into employees_tbl(name, code, location, team_name, block, designation, email, contact_number, created_on, status)
+        values('${employee.name}', '${employee.code}', '${employee.location}', '${employee.location}', '${employee.block}', '${employee.designation}', '${employee.email}', '${employee.mobile}', now(), 1)`;
     }
     else {
-        achivedSql = `insert into employees_tbl(name, code, location, created_on, status)
-        values('${employee.name}', uuid(), '${employee.location}', now(), 1)`;
+        achivedSql = `insert into employees_tbl(name, code, location, team_name, block, designation, email, contact_number, created_on, status)
+        values('${employee.name}', uuid(), '${employee.location}', '${employee.location}', '${employee.block}', '${employee.designation}', '${employee.email}', '${employee.mobile}', now(), 1)`;
     }
 
     let plannedRecord = await executeNonQuery(achivedSql);
@@ -1314,7 +1324,7 @@ async function insertEmployee(employee) {
 }
 
 async function updateEmployee(employee) {
-    achivedSql = `update employees_tbl set name='${employee.name}', location='${employee.location}', updated_on=now(), status=1 where code='${employee.code}'`;
+    achivedSql = `update employees_tbl set name='${employee.name}', location='${employee.location}', block='${employee.block}', designation='${employee.designation}', email='${employee.email}', contact_number='${employee.mobile}', updated_on=now(), status=1 where code='${employee.code}'`;
 
     let plannedRecord = await executeNonQuery(achivedSql);
 
