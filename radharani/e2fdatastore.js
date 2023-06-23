@@ -52,8 +52,8 @@ function getDBPool() {
         connectTimeout: 15000,
         host: "www.oxytra.com",
         user: "linoceuser",
-        password: "l1n0ceUser@2022",
-        database: "linoce",
+        password: "l1n0ceUser@2023",
+        database: "oxytra",
         port: 3306
     });    
 

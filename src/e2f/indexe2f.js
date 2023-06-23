@@ -19,7 +19,7 @@ function login() {
 
     let e2fcrawler = new E2FCrawler({url: '', output: 'json'});
     let response = e2fcrawler.postData({url: 'https://eflyapi.ease2fly.com/api/auth/login', "rejectUnauthorized": false, data: {
-        email:"info@oxytra.com",
+        email:"oxytra.llp@gmail.com",
         pwd:"Sumit@12356"
     }});
 

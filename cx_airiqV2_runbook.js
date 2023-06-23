@@ -40,10 +40,10 @@ class CheapPortal_Crawl {
         else {
             //await this.page.type(selector, value);
             console.log(`Value entered : ${value}`);
-            await this.page.screenshot({path: 'content-read_start.png'});
+            //await this.page.screenshot({path: 'content-read_start.png'});
             await ctrl.type(value);
             await this.page.waitFor(200);
-            await this.page.screenshot({path: 'content-read_end.png'});
+            //await this.page.screenshot({path: 'content-read_end.png'});
         }
         //await page.select('#telCountryInput', 'my-value')
 
@@ -1001,6 +1001,180 @@ class CheapPortal_Crawl {
 
         return flag;
     }    
+
+    async tx_read_alloptions_items(taskinfo) {
+        var flag = true;
+        var content = [];
+        var element_loaded = true;
+        var contentItems = [];
+
+        var selector = `${this.input_parameters.selector} option`;
+        var timeout = this.input_parameters.timeout;
+
+        content = await this.page.evaluate((sel) => {
+            console.log(`Selector -> ${sel}`);
+            return Array.from(document.querySelectorAll(sel)).map(element=> {
+                //console.log(JSON.stringify(element));
+                let sectorValue = element.text;
+                let source = null;
+                let destination = null;
+
+                if(element.value == "Select Sector") {
+                    return null;
+                }
+                else {
+                    if(element.text.trim().split('//').length>0) {
+                        source = element.text.trim().split('//')[0].trim();
+                        destination = element.text.trim().split('//')[1].trim();
+                        return {'id': parseInt(element.value, 10), 'sector': element.text, 'source': source, 'destination': destination};
+                    }
+                    else {
+                        return null;
+                    }
+                }
+            })
+        }, selector)
+        .catch(reason => {
+            this.log('error', `E19 => ${reason}`);
+            flag = false;
+        });
+        
+        //console.log(`Content => ${JSON.stringify(content)}`);
+        let optionItems = [];
+        for (let index = 0; content && index < content.length; index++) {
+            const contentItem = content[index];
+            if(contentItem) {
+                optionItems.push(contentItem);
+            }
+        }
+
+        this.output_parameters.options = optionItems;
+
+        // document.querySelector(sel).innerHTML, selector).catch(reason => {
+        //     console.log(`E18 => ${reason}`);
+        //     flag = false;
+        // });
+
+        return content && content.length > 0;
+    }
+
+    async tx_find_available_dates(taskinfo) {
+        var flag = true;
+        var content = [];
+        var element_loaded = true;
+        var contentItems = [];
+
+        var selector = this.input_parameters.selector;
+        var inputSelector = this.input_parameters.input_selector;
+        var dateSelector = this.input_parameters.date_selector;
+        var attributeName = this.input_parameters.attribute_name;
+        var timeout = this.input_parameters.timeout;
+        var sectors = this.input_parameters.sectors;
+        
+        var waitOptions = {waitUntil: 'domcontentloaded', timeout: timeout};
+        
+        for (let index = 0; index < sectors.length; index++) {
+            let sectorItem = sectors[index];
+            //temporary code
+            //if(index>5) break;
+
+            if(sectorItem) {
+                element_loaded = true;
+                let sectorValue = sectorItem.sector;
+                this.log('info', `Sector => ${sectorValue}`);
+                await this.page.select(selector, sectorItem.id.toString());
+
+                await this.page.waitForNavigation(waitOptions).catch(async (reason) => {
+                    this.log('error', `Error (button click) => ${reason}`);
+                    console.log('error', `Error (button click) => ${reason}`);
+                    // await this.page.screenshot({path: `gofirst-${time}.png`});
+                })
+
+                // await this.page.waitForSelector(selector, {timeout: timeout}).catch(async reason => {
+                //     console.log(`E16 => ${reason}`);
+                //     element_loaded = false;
+                // });
+
+                if(element_loaded) {
+                    await this.page.focus(inputSelector);
+                    await this.page.waitFor(200);
+
+                    let dates = await this.page.evaluate((obj) => {
+                        let elements = Array.from(document.querySelectorAll('script'));
+                        let filteredDates=[];
+                        let scriptContent = null;
+                        for (let idx = 0; idx < elements.length; idx++) {
+                            const element = elements[idx];
+                            scriptContent = element.textContent;
+
+                            if(scriptContent.indexOf('var eventDates = {}')>-1) {
+                                console.log(`My script => ${scriptContent}`);
+
+                                var regex = new RegExp(/\w[0-9\/]+/, 'gm');                                
+                                let dates = scriptContent.match(regex);
+                                if(dates && dates.length>0) {
+                                    for (let xidx = 0; xidx < dates.length; xidx++) {
+                                        const dateItem = dates[xidx];
+                                        if(Object.values(filteredDates).indexOf(dateItem) == -1) {
+                                            filteredDates.push(dateItem);
+                                        }
+                                    }
+                                }
+                                break;
+                            }
+                        }
+
+                        return filteredDates;
+                    }, {dateSelector, attributeName, moment})
+                    .catch(reason => {
+                        this.log('error', `E20 => ${reason}`);
+                        flag = false;
+                    });
+
+                    //console.log(`Dates => ${JSON.stringify(dates)}`);
+                    this.log('info', `Available dates count : ${dates.length}`);
+                    sectorItem['availableDates'] = dates;
+                    // const ctrl = await this.page.$(inputSelector);
+                    // await ctrl.type(value);
+                    // await this.page.waitFor(200);
+                }
+            }
+        }
+
+        this.output_parameters.availableSectors = sectors;
+        //this.context.setContextData('responsePayload', sectors);
+        return sectors && sectors.length>0;
+    }
+
+    async tx_save_availability2db(taskinfo) {
+        var flag = true;
+
+        let runid = `${uuidv4()}_${moment().format("DD-MMM-YYYY HH:mm:ss.SSS")}`;
+        var availableSectors = this.input_parameters.availableSectors;
+        var provider = this.input_parameters.provider;
+        const datastore = require('./radharani/airiqV2datastore');
+        let updatedAvailabilities = availableSectors;
+
+        try
+        {
+            if(availableSectors && availableSectors.length>0) {
+                updatedAvailabilities = await datastore.saveAvailableSectors(runid, availableSectors, provider);
+
+                this.log('info', JSON.stringify(updatedAvailabilities));
+            }
+            else {
+                this.log('info', `There is not availability from provider : ${provider}`);
+                flag = false;
+            }
+        }
+        catch(ex) {
+            this.log('Error', ex);
+            flag = false;
+        }
+
+        this.context.setContextData('responsePayload', updatedAvailabilities);
+        return flag;
+    }
 
     hlp_get_passed_parameters(taskinfo) {
         var params = {};

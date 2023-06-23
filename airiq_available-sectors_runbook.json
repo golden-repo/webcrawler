@@ -1,0 +1,617 @@
+{
+	"config": {
+		"path": "/",
+		"module_prefix": "cx",
+		"task_prefix": "tx"
+	},
+	"pages": [
+		{
+			"id": 1,
+			"name": "index",
+			"actions": [
+				{
+					"name": "index",
+					"codefile": "./cx_airiqV2_runbook.js",
+					"properties": [],
+					"tasks": [
+						{
+							"id": 1,
+							"name": "set_user_input",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#user_txt", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "value", "value": "9800412356", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${status} === true", "taskid": 2},
+								{"id": 2, "name": "connect2", "expression": "${status} === false", "taskid": 99}
+							]
+						},						
+						{
+							"id": 2,
+							"name": "set_user_input",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#pwd_txt", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "value", "value": "Sumit@12356", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${status} === true", "taskid": 3},
+								{"id": 2, "name": "connect2", "expression": "${status} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 3,
+							"name": "click_button",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#LinkButton1", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "timeout", "value": "2000", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 4},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 4,
+							"name": "element_present",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#select2-dest_cmd-container", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "timeout", "value": "1500", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 13},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 8,
+							"name": "read_context_payload",
+							"parameters": [
+								{"id": 1, "name": "varname", "value": "source", "sourcetype": "value", "direction": "input"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${status} === true", "taskid": 9},
+								{"id": 2, "name": "connect2", "expression": "${status} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 9,
+							"name": "read_context_payload",
+							"parameters": [
+								{"id": 1, "name": "varname", "value": "destination", "sourcetype": "value", "direction": "input"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${status} === true", "taskid": 10},
+								{"id": 2, "name": "connect2", "expression": "${status} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 10,
+							"name": "read_context_payload",
+							"parameters": [
+								{"id": 1, "name": "varname", "value": "departure_date", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "datatype", "value": "datetime", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "format", "value": "DD/MMM/YYYY", "sourcetype": "value", "direction": "input"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${status} === true", "taskid": 11},
+								{"id": 2, "name": "connect2", "expression": "${status} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 11,
+							"name": "read_context_payload",
+							"parameters": [
+								{"id": 1, "name": "varname", "value": "adult", "sourcetype": "value", "direction": "input"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${status} === true", "taskid": 12},
+								{"id": 2, "name": "connect2", "expression": "${status} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 12,
+							"name": "concate_variable",
+							"parameters": [
+								{"id": 1, "name": "first_variable", "value": "${source}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "second_variable", "value": "${destination}", "sourcetype": "variable", "direction": "input"},
+								{"id": 3, "name": "sector", "value": "${content}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${status} === true", "taskid": 13},
+								{"id": 2, "name": "connect2", "expression": "${status} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 13,
+							"name": "page_scroll",
+							"parameters": [
+								{"id": 1, "name": "scrollheight", "value": "100", "sourcetype": "value", "direction": "input"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${status} === true", "taskid": 14},
+								{"id": 2, "name": "connect2", "expression": "${status} === false", "taskid": 99}
+							]
+						},												
+						{
+							"id": 14,
+							"name": "page_scroll",
+							"parameters": [
+								{"id": 1, "name": "scrollheight", "value": "0", "sourcetype": "value", "direction": "input"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${status} === true", "taskid": 15},
+								{"id": 2, "name": "connect2", "expression": "${status} === false", "taskid": 99}
+							]
+						},						
+						{
+							"id": 15,
+							"name": "element_present",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#dest_cmd", "sourcetype": "value", "direction": "input"},
+								{"id": 1, "name": "timeout", "value": "1500", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 16},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 16,
+							"name": "read_alloptions_items",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#dest_cmd", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "timeout", "value": "500", "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "options", "value": "${options}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 17},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 17,
+							"name": "find_available_dates",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#dest_cmd", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "input_selector", "value": "#check_out", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "date_selector", "value": ".event", "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "attribute_name", "value": "title", "sourcetype": "value", "direction": "input"},
+								{"id": 5, "name": "timeout", "value": "1500", "sourcetype": "value", "direction": "input"},
+								{"id": 6, "name": "sectors", "value": "${options}", "sourcetype": "variable", "direction": "input"},
+								{"id": 7, "name": "availableSectors", "value": "${availableSectors}", "sourcetype": "variable", "direction": "output"},
+								{"id": 8, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 18},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 18,
+							"name": "save_availability2db",
+							"parameters": [
+								{"id": 1, "name": "availableSectors", "value": "${availableSectors}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "provider", "value": "airiq", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"},
+								{"id": 4, "name": "updatedSectors", "value": "${updatedSectors}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 99},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 181,
+							"name": "click_element",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#select2-dest_cmd-container", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "timeout", "value": "500", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "isnavigate", "value": "false", "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 19},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 19,
+							"name": "set_user_input",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "span.select2-search.select2-search--dropdown > input", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "value", "value": "${sector}", "sourcetype": "variable", "direction": "input"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${status} === true", "taskid": 20},
+								{"id": 2, "name": "connect2", "expression": "${status} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 20,
+							"name": "click_element",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#select2-dest_cmd-results > li", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "timeout", "value": "500", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "isnavigate", "value": "false", "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 21},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 21,
+							"name": "set_user_input",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#check_out", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "value", "value": "${departure_date}", "sourcetype": "variable", "direction": "input"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${status} === true", "taskid": 22},
+								{"id": 2, "name": "connect2", "expression": "${status} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 22,
+							"name": "set_user_input",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#adul_cmd", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "value", "value": "${adult}", "sourcetype": "variable", "direction": "input"},
+								{"id": 3, "name": "control_type", "value": "dropdown", "sourcetype": "value", "direction": "input"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${status} === true", "taskid": 23},
+								{"id": 2, "name": "connect2", "expression": "${status} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 23,
+							"name": "element_present",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#SearchBtn", "sourcetype": "value", "direction": "input"},
+								{"id": 1, "name": "timeout", "value": "1500", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 24},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 24,
+							"name": "click_button",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#SearchBtn", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "timeout", "value": "2500", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 25},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 25,
+							"name": "element_present",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "div.flit-box", "sourcetype": "value", "direction": "input"},
+								{"id": 1, "name": "timeout", "value": "2500", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 26},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 99}
+							]
+						},						
+						{
+							"id": 26,
+							"name": "read_content",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "div.flit-box", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "attribute_selector", "value": "div.flit-detls > input", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "content_type", "value": "text", "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "isarray", "value": "true", "sourcetype": "value", "direction": "input"},
+								{"id": 5, "name": "regex", "value": "\\b[a-zA-Z0-9: -]+\\b", "sourcetype": "value", "direction": "input"},
+								{"id": 6, "name": "raw_content", "value": "${content}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 28},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 27,
+							"name": "parse_content_via_regex",
+							"parameters": [
+								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "content_type", "value": "text", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "regex", "value": "\\b[a-zA-Z0-9: -]+\\b", "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "raw_content", "value": "${content}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 100},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 28,
+							"name": "prepare_data",
+							"parameters": [
+								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "dataLayer", "value": "${dataLayer}", "sourcetype": "variable", "direction": "input"},
+								{"id": 3, "name": "responsePayload", "value": "${responsePayload}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 100},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 2121,
+							"name": "read_global_variable",
+							"parameters": [
+								{"id": 1, "name": "varname", "value": "dataLayer", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "filter_key", "value": "event", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "filter_value", "value": "transaction", "sourcetype": "value", "direction": "input"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 3},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 3131,
+							"name": "read_content",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "div.itin-flights", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "content_type", "value": "text", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 4},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 4,
+							"name": "parse_content_via_regex",
+							"parameters": [
+								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "content_type", "value": "text", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "regex", "value": "\\b[a-zA-Z0-9: ]+\\b", "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "output"},
+								{"id": 5, "name": "pnrinfo", "value": "${dataLayer}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 5},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 5,
+							"name": "prepare_data",
+							"parameters": [
+								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "dataLayer", "value": "${dataLayer}", "sourcetype": "variable", "direction": "input"},
+								{"id": 3, "name": "pnrpayload", "value": "${pnrpayload}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 19},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 10,
+							"name": "parse_content",
+							"parameters": [
+								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "content_type", "value": "html", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 11},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 11,
+							"name": "element_present",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "#DataTables_Table_0", "sourcetype": "value", "direction": "input"},
+								{"id": 1, "name": "timeout", "value": "1500", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 12},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 12,
+							"name": "read_global_variable",
+							"parameters": [
+								{"id": 1, "name": "varname", "value": "dataLayer", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "token", "value": "${token}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 14},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 200,
+							"name": "click_button",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "a.manageBooking", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "timeout", "value": "1500", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 2},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 100}
+							]
+						},
+						{
+							"id": 210,
+							"name": "set_user_input",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "input.manageemail", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "value", "value": "PAX1", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${status} === true", "taskid": 3},
+								{"id": 2, "name": "connect2", "expression": "${status} === false", "taskid": 100}
+							]
+						},
+						{
+							"id": 220,
+							"name": "set_user_input",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "input.managepnr", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "value", "value": "W3NJ9L", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 4},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 100}
+							]
+						},
+						{
+							"id": 230,
+							"name": "element_present",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": ".goBtn.managebooking", "sourcetype": "value", "direction": "input"},
+								{"id": 1, "name": "timeout", "value": "1500", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 5},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},						
+						{
+							"id": 240,
+							"name": "click_button",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": ".goBtn.managebooking", "sourcetype": "value", "direction": "input"},
+								{"id": 1, "name": "timeout", "value": "2500", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 6},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 100}
+							]
+						},						
+						{
+							"id": 14,
+							"name": "call_api",
+							"parameters": [
+								{"id": 1, "name": "url", "value": "https://www.cheapfixdeparture.com/api/flights", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "method", "value": "get", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "token", "value": "${token}", "sourcetype": "variable", "direction": "input"},
+								{"id": 4, "name": "content_type", "value": "json", "sourcetype": "value", "direction": "input"},
+								{"id": 5, "name": "tickets", "value": "${tickets}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 16},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 16,
+							"name": "transform_ticket_data",
+							"parameters": [
+								{"id": 1, "name": "tickets", "value": "${tickets}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "tickets", "value": "${tickets}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 50},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 20,
+							"name": "read_content",
+							"parameters": [
+								{"id": 1, "name": "selector", "value": "itin-flights", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "content_type", "value": "html", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 30},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 30,
+							"name": "parse_content",
+							"parameters": [
+								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "content_type", "value": "html", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 40},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 40,
+							"name": "read_ticket_data",
+							"parameters": [
+								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "selector", "value": "#Select_Sector", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "content_selector", "value": ".datatable>tbody", "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "page_size_selector", "value": "select.input-sm.form-control", "sourcetype": "value", "direction": "input"},
+								{"id": 5, "name": "page_size_value", "value": "100", "sourcetype": "value", "direction": "input"},
+								{"id": 6, "name": "timeout", "value": "30000", "sourcetype": "value", "direction": "input"},
+								{"id": 7, "name": "delay", "value": "1000", "sourcetype": "value", "direction": "input"},
+								{"id": 8, "name": "tickets", "value": "", "sourcetype": "value", "direction": "output"},
+								{"id": 9, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 50},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 50,
+							"name": "save2db",
+							"parameters": [
+								{"id": 1, "name": "content", "value": "${content}", "sourcetype": "variable", "direction": "input"},
+								{"id": 2, "name": "tickets", "value": "${tickets}", "sourcetype": "variable", "direction": "input"},
+								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"},
+								{"id": 4, "name": "updated_tickets", "value": "${updated_tickets}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 19},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 19}
+							]
+						},
+						{
+							"id": 99,
+							"name": "close",
+							"parameters": [],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "true", "taskid": 100}
+							]
+						},
+						{
+							"id": 100,
+							"name": "end",
+							"parameters": [],
+							"connects": []
+						}
+					]
+				}
+			]
+		}
+	]
+}

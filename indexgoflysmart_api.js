@@ -128,8 +128,8 @@ router.post('/', async function(req, res, next) {
       var deptid = parseInt(req.body.sourceCityId);
       var arrvid = parseInt(req.body.destinationCityId);
 
-      var email = '9382207002';
-      var password = 'Sumit@12356';
+      var email = '9593012356';
+      var password = 'Sumit$$12356';
 
       var payload = req.body;
       var url = `https://goflysmartapi.azurewebsites.net/api/search?adults=${adult}&child=${child}&infant=${infant}&destination=${destination}&origin=${origin}&departure_date=${departure_date}&page=${page}`;
@@ -244,7 +244,7 @@ function prepareFlightStatData(data, payload) {
         }
 
         ticket.availability = flightData.seats_available ? parseInt(flightData.seats_available) : (parseInt(payload.adult) + parseInt(payload.child));
-        ticket.price = parseFloat(flightData.adult) + 50.0; //default API price charge
+        ticket.price = parseFloat(flightData.adult); // + 50.0; //default API price charge
         ticket.recid = flightData.id;
 
         logger.log('info', `Ticket ${index} - ${JSON.stringify(ticket)}`);

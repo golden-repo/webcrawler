@@ -3,8 +3,8 @@
 
 const mysql = require('mysql');
 const moment = require('moment');
-const DEFAULT_COMPANY_ID = 15; //1;
-const DEFAULT_USER_ID = 994; //104;
+const DEFAULT_COMPANY_ID = 1;
+const DEFAULT_USER_ID = 104;
 var pool = null;
 
 const logger = require('../src/common/logger').Logger;
@@ -37,17 +37,17 @@ function getDBPool() {
     // });
 
     //Local DB
-    // pool = mysql.createPool({
-    //     connectionLimit : 2,
-    //     connectTimeout  : 60 * 60 * 1000,
-    //     acquireTimeout  : 60 * 60 * 1000,
-    //     timeout         : 60 * 60 * 1000,        
-    //     host: "localhost",
-    //     user: "root",
-    //     password: "",
-    //     database: "oxytra",
-    //     port: 3306
-    // });
+    pool = mysql.createPool({
+        connectionLimit : 2,
+        connectTimeout  : 60 * 60 * 1000,
+        acquireTimeout  : 60 * 60 * 1000,
+        timeout         : 60 * 60 * 1000,        
+        host: "localhost",
+        user: "root",
+        password: "",
+        database: "oxytra",
+        port: 3306
+    });
     
     // //Remote DB
     // pool = mysql.createPool({
@@ -61,17 +61,184 @@ function getDBPool() {
     // });
 
     //New production
-    pool = mysql.createPool({
-        connectionLimit: 2,
-        connectTimeout: 15000,
-        host: "www.oxytra.com",
-        user: "linoceuser",
-        password: "l1n0ceUser@2022",
-        database: "linoce",
-        port: 3306
-    });    
+    // pool = mysql.createPool({
+    //     connectionLimit: 2,
+    //     connectTimeout: 15000,
+    //     host: "www.oxytra.com",
+    //     user: "linoceuser",
+    //     password: "l1n0ceUser@2023",
+    //     database: "oxytra",
+    //     port: 3306
+    // });   
 
     return pool;
+}
+
+async function saveAvailableSectors(runid, availableSectors) {
+    let self = this;
+
+    return new Promise((resolve, reject) => {
+        getDBPool().getConnection(async function(err, con) {
+            try
+            {
+                if(err) {
+                    self.log('Error', err);
+                    reject(err);
+                }
+    
+                availableSectors = await fillSectorCodes(con, availableSectors);
+    
+                availableSectors = await updateAvailableSectors(con, availableSectors, runid);
+                self.log('info', JSON.stringify(availableSectors));
+            }
+            catch(ex) {
+                console.log(ex);
+                reject(ex);
+            }
+            finally {
+                //con.destroy();
+                con.release();
+            }
+
+            resolve(availableSectors);
+        });
+    });
+}
+
+async function fillSectorCodes(conn, availableSectors) {
+    if(!availableSectors || availableSectors.length == 0) return null;
+
+    let cities = await getCities(conn, null);
+    for (let index = 0; index < availableSectors.length; index++) {
+        let sector = availableSectors[index];
+
+        let sourceCity = sector.source ? matchCityDetails(cities, sector.source.toLowerCase()) : null;
+        let destinationCity = sector.destination ? matchCityDetails(cities, sector.destination.toLowerCase()) : null;
+
+        if(sourceCity && destinationCity && sourceCity.id>0 && destinationCity.id>0) {
+            sector.sourceCityId = sourceCity.id;
+            sector.sourceCityCode = sourceCity.code;
+            sector.destinationCityId = destinationCity.id;
+            sector.destinationCityCode = destinationCity.code;
+        }
+        else {
+            sector.sourceCityId = -1;
+            sector.sourceCityCode = null;
+            sector.destinationCityId = -1;
+            sector.destinationCityCode = null;
+        }
+    }
+
+    return availableSectors;
+}
+
+function matchCityDetails(cities, sectorCityName) {
+    for (let ctidx = 0; ctidx < cities.length; ctidx++) {
+        const city = cities[ctidx];
+        let airiq_code = city.airiq_code ? city.airiq_code.toLowerCase() : city.airiq_code;
+        //capture source city details
+        if(city.code.toLowerCase() == sectorCityName || 
+            airiq_code == sectorCityName || 
+            sectorCityName.toLowerCase().indexOf(airiq_code)>-1 || 
+            city.city.toLowerCase().indexOf(sectorCityName)>-1 || 
+            (city.synonyms && city.synonyms.toLowerCase().indexOf(sectorCityName)>-1)) {
+            return city;
+        }
+    }
+}
+
+async function updateAvailableSectors(con, availableSectors, runid) {
+    if(!availableSectors || availableSectors.length == 0) return null;
+    let updatedSector = null;
+    let self = this;
+
+    for (let index = 0; index < availableSectors.length; index++) {
+        let sector = availableSectors[index];
+        
+        if(sector && sector.availableDates && sector.availableDates.length>=0) {
+            updatedSector = await updateAvailableSector(con, sector, runid);
+        }
+    }
+
+    return availableSectors;
+}
+
+async function updateAvailableSector(conn, sector, runid) {
+    let currentDate = moment.utc(new Date().toGMTString()).format("YYYY-MM-DD HH:mm:ss"); //moment(new Date()).format("YYYY-MM-DD HH:mm");
+    let self = this;
+    return new Promise((resolve, reject) => {
+        var qrySql = `select id from inventory_availability where provider='airiq' and source_city_id=${sector.sourceCityId} and destination_city_id=${sector.destinationCityId}`;
+        conn.query(qrySql, async function (err, data) {
+            if(err) {
+                log('Error', err);
+                reject(err);
+            }
+            let insertStatus = {};
+            let sectorRecord = (data && data.length>0) ? data[0] : null;
+            let resultdata = null;
+    
+            if(sector.availableDates && sector.availableDates.length>=0) {
+                if(sectorRecord && sectorRecord.id>0) {
+                    var updateSql = `update inventory_availability set available_dates='${sector.availableDates.join(',')}', record_id='${sector.id}', runid='${runid}', updated_by=${DEFAULT_USER_ID}, 
+                            updated_on='${currentDate}' where provider='airiq' and id=${sectorRecord.id}`;
+        
+                    log('info', updateSql);
+                    resultdata = await updateData2DB(conn, updateSql, sectorRecord, sector);
+                }
+                else {
+                    var insertSql = `INSERT INTO inventory_availability (provider, sector, source_city, destination_city, source_city_id, destination_city_id, source_city_code, destination_city_code, 
+                        available_dates, record_id, runid, created_by) 
+                        VALUES ('airiq', '${sector.sector}', '${sector.source}', '${sector.destination}', ${sector.sourceCityId}, ${sector.destinationCityId}, '${sector.sourceCityCode}', '${sector.destinationCityCode}', 
+                        '${sector.availableDates.join(',')}', '${sector.id}', '${runid}', ${DEFAULT_USER_ID})`;
+
+                    log('info', insertSql);
+                    resultdata = await updateData2DB(conn, insertSql, sectorRecord, sector);
+                    // conn.query(insertSql, function (err, data) {
+                    //     return new Promise((rsv, rct) => {
+                    //         if (err) {
+                    //             console.log(err);
+    
+                    //             rct(err);
+                    //         }
+                    //         else {
+                    //             insertStatus = data;
+    
+                    //             sector.iid = insertStatus.insertId
+                    //             rsv(sector);
+                    //         }
+                    //     });
+                    // });                
+                }
+            }
+            else {
+                reject('No available dates present. Ignoring operation');
+            }
+
+            resolve(sector);
+        });
+    });
+}
+
+async function updateData2DB(conn, updateSql, sectorRecord, sector) {
+    return new Promise((resolve, reject) => {
+        conn.query(updateSql, function (err, data) {
+            if (err) {
+                log('error', err);
+
+                reject(err);
+            }
+            else {
+                insertStatus = data;
+                if(insertStatus.insertId) {
+                    sector.iid = insertStatus.insertId;
+                }
+                else {
+                    sector.iid = sectorRecord.id;
+                }
+                resolve(sector);
+            }
+        });
+    });
 }
 
 async function saveData(result, runid, callback) {
@@ -424,14 +591,19 @@ async function getCityItem(city) {
 }
 
 async function getCities(conn, callback) {
-    var sql = `select * from city_tbl`;
-    conn.query(sql, function (err, data) {
-        if (err || data===null || data===undefined) {
-            console.log(err);
-        }
-        if(callback) {
-            callback(data);
-        }
+    return new Promise((resolve, reject) => {
+        var sql = `select * from city_tbl`;
+        conn.query(sql, function (err, data) {
+            if (err || data===null || data===undefined) {
+                console.log(err);
+                reject(err);
+            }
+
+            resolve(data);
+            // if(callback) {
+            //     callback(data);
+            // }
+        });
     });
 }
 
@@ -1175,4 +1347,4 @@ function saveAirline(conn, airline, callback) {
 
 //jshint ignore:end
 
-module.exports = {saveData, finalization, saveCircleBatchData, updateExhaustedCircleInventory, getCityItem};
+module.exports = {saveAvailableSectors, log};

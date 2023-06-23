@@ -356,6 +356,9 @@ function load_rb_config(tenantname='') {
         case 'airiq':
             rb_file_name = './airiqV2_crawl_runbook.json';
             break;
+        case 'airiq:available-sectors':
+            rb_file_name = './airiq_available-sectors_runbook.json';
+            break;
         default:
             break;
     }
@@ -496,6 +499,113 @@ async function ProcessActivityV2(targetUri, payload, runid=uuid5()) {
     else {
         return null;
     }
+}
+
+async function ProcessActivityV3(targetUri, payload, extradata, runid=uuid5()) {
+    var data = {};
+    let workflowName = getContextValue(extradata, 'workflowName');
+
+    try
+    {
+        if(targetUri===undefined || targetUri===null || targetUri==="")
+            return;
+
+        var config_data = {};
+        init_context();
+        await navigatePageV2(targetUri);
+        log('Page navigated...');
+        if(browser!==null && page!==null) {
+            log('URL -> ' + page.url());
+
+            config_data = load_rb_config(workflowName); //airiq
+            let contextObj = getContext();
+            contextObj.setContextData('targeturi', targetUri);
+            contextObj.setContextData('browser', browser);
+            contextObj.setContextData('page', page);
+            contextObj.setContextData('runbook', config_data);
+            contextObj.setContextData('payload', payload);
+
+            for(pageIdx=0; pageIdx<config_data.pages.length; pageIdx++) {
+                pageConfig = config_data.pages[pageIdx];
+                contextObj.setContextData('pageconfig', pageConfig);
+
+                for (let aindex = 0; aindex < pageConfig.actions.length; aindex++) {
+                    const action = pageConfig.actions[aindex];
+                    
+                    var task_info = action.tasks[0];
+                    // var action = pageConfig.actions[0];
+                    var actionExecutorFinder = getActionExecutor(contextObj, action, task_info, (status) => {
+                        log('info', status);
+                    });
+
+                    var task_name = actionExecutorFinder.task_name;
+                    var source = actionExecutorFinder.sourceobj;
+                    var actionExecutor = actionExecutorFinder.executor;
+                    log('info', `Task Name : ${task_name}`);
+    
+                    while(actionExecutorFinder !== null) {
+                        // actionExecutor.execute();
+                        let result = await actionExecutor.call(source, task_info);
+                        contextObj.setContextData('result', result);
+                        if(Array.isArray(contextObj.parameters)) {
+                            contextObj.parameters = source.output_parameters;
+                        }
+                        else {
+                            contextObj.parameters = Object.assign(contextObj.parameters, source.output_parameters);
+                        }
+
+                        task_info = getNextActionTask(contextObj, action, task_info);
+    
+                        actionExecutorFinder = getActionExecutor(contextObj, action, task_info, (status) => {
+                            log('info', status);
+                        });
+
+                        if(actionExecutorFinder) {
+                            task_name = actionExecutorFinder.task_name;
+                            source = actionExecutorFinder.sourceobj;
+                            actionExecutor = actionExecutorFinder.executor;
+                            log('info', `Next Task Name : ${task_name}`);
+                        }
+                    }
+                }
+            }
+
+            data = contextObj.getContextData('responsePayload');
+            log('info', `Execution completed`);
+        }
+    }
+    catch(ex) {
+        log(`Retrying once again.${ex}`);
+    }
+    finally
+    {
+        if(browser) {
+            browser.close();
+            log('Closing browser');
+        }
+    }
+
+    if(data && Object.keys(data).length>0) {
+        return data;
+    }
+    else {
+        return null;
+    }
+}
+
+function getContextValue(contextData, keyName) {
+    if(contextData == null || contextData == undefined || contextData.length == 0) return null;
+    let keyValue = null;
+
+    for (let index = 0; index < contextData.length; index++) {
+        const contextItem = contextData[index];
+        if(contextItem.key == keyName) {
+            keyValue = contextItem.value;
+            break;
+        }
+    }
+
+    return keyValue;
 }
 
 function transformData(textValue, providedData) {
@@ -1174,4 +1284,4 @@ async function start() {
     }
 }
 
-module.exports = {ProcessActivityV2};
+module.exports = {ProcessActivityV2, 'process':ProcessActivityV3};

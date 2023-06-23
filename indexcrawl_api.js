@@ -14,6 +14,8 @@ const fetch = require('isomorphic-fetch');
 const airtbCrawlCommonLib = require('./airtb_crawl');
 //const airiqCrawlCommonLib = require('./airiqV2_crawl');
 
+const airiqController = require('./airiq-controller');
+
 // const winston = require('winston');
 // const {combine, timestamp, label, printf} = winston.format;
 // const DailyRotateFile = require('winston-daily-rotate-file');
@@ -108,6 +110,7 @@ app.get("/", (req, res) => {
 /* GET programming languages. */
 var cachedToken = null;
 
+/* Commented as it's moved to airiq_api
 router.get('/spicejet/:pnr/:email', async function(req, res, next) {
     try {
       var data = {};
@@ -132,6 +135,7 @@ router.get('/spicejet/:pnr/:email', async function(req, res, next) {
       next(err);
     }
 });
+*/
 
 async function getFlightStat(token, payload) {
   var data = null;
@@ -433,6 +437,7 @@ router.post('/airtb', async function(req, res, next) {
   }
 });
 
+/* //commenting it as it's moved to airiq_api
 router.get('/airasia/:pnr/:email', async function(req, res, next) {
   try {
     var data = {};
@@ -452,6 +457,10 @@ router.get('/airasia/:pnr/:email', async function(req, res, next) {
     next(err);
   }
 });
+*/
+
+//configure AirIQ routes
+airiqController.init(router);
 
 //common code
 app.use('/api/crawl', router)
