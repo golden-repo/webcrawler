@@ -181,6 +181,8 @@ async function navigatePage(pageName) {
             return response.url().indexOf(pg.name)>-1;
         });
         
+        log('Intercepting request ...');
+
         page.on('domcontentloaded',()=> {
             //log('Content Loaded - dom even fired');
             pageLoaded = true;
@@ -305,9 +307,9 @@ async function navigatePage(pageName) {
                             log(`2.eclick - child - ${reason}`);
                             //await takeSnapshot('2_eclick-child');
                         });
-                        if(selectedItem===null || selectedItem===undefined) {
-                            selectedItem = await page.$(task.checkselector).catch(reason=> log('2_checkselector not found', reason));
-                        }
+                        // if(selectedItem===null || selectedItem===undefined) {
+                        //     selectedItem = await page.$(task.checkselector).catch(reason=> log('2_checkselector not found', reason));
+                        // }
                     }
 
                     // if(val.checkselector!=='' && val.checkselector!==null) {

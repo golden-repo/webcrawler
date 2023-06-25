@@ -97,6 +97,15 @@ function contentParserV2(content, context) {
         content = content.replace(/\n\n/g, '\n');
         //contentParts = content.split('\t');
         contentParts = content.split('\n');
+        if(content && content !== '' && contentParts && contentParts.length>2){
+            if(contentParts[2] == 'Non - Stop') {
+                contentParts.splice(2,1);
+                contentParts.unshift('Akasa Air');
+            }
+            else if(contentParts[3] == 'Non - Stop') {
+                contentParts.splice(3,1);
+            }
+        }
 
         for (let index = 0; contentParts.length>1 && index < contentParts.length; index++) {
             const part = contentParts[index].trim();
@@ -132,16 +141,17 @@ function contentParserV2(content, context) {
                     //     deal.arrival = {"circle": ''};
                     // }
                     break;
-                case 4:
+                case 3:
                     //let dept_arv_date = part.match(/([0-9]{2})\s([a-zA-Z]{3})\s([0-9]{4})|([0-9]{0,2}:[0-9]{0,2})/gm);
                     let date = part.trim();
-                    let deptTime = contentParts[6];
-                    let arrvTime = contentParts[7];
+                    date = moment(date, 'DD MMM - ddd').format('YYYY-MM-DD');
+                    let deptTime = contentParts[5];
+                    let arrvTime = contentParts[6];
 
                     deal.departure = {"circle": deal.departure.circle, "date": date, "time": deptTime, epoch_date: Date.parse(`${date} ${deptTime}:00.000`)}; //+05:30
                     deal.arrival = {"circle": deal.arrival.circle, "date": date, "time": arrvTime, epoch_date: Date.parse(`${date} ${arrvTime}:00.000`)}; //+05:30
                     break;
-                case 5:
+                case 4:
                     if(part) {
                         deal.flight_number = part.trim().replace(' ', '-');
                     }
@@ -178,27 +188,31 @@ function contentParserV2(content, context) {
                     // }
 
                     //break;
-                case 11:
-                    let partvalue = part.replace('Seats :', '').trim();
-                    let qty = parseInt(partvalue.replace('+', ''));
-        
-                    if(qty>0) {
-                        deal.availability = qty;
-                    }
-                    else {
-                        deal.availability = -1;
+                case 10:
+                    if(part && part.indexOf('Seats')>-1) {
+                        let partvalue = part.replace('Seats :', '').trim();
+                        let qty = parseInt(partvalue.replace('+', ''));
+            
+                        if(qty>0) {
+                            deal.availability = qty;
+                        }
+                        else {
+                            deal.availability = -1;
+                        }
                     }
                     break;
-                case 9:
-                    src_dest = part.match(/((AQP)\d+)/gm);
-                    if(src_dest!==null && src_dest!==undefined && src_dest.length>0) {
-                        //console.log(src_dest[0].replace('AQP','').trim());
-                        let price = parseFloat(src_dest[0].replace('AQP','').trim());
-            
-                        deal.price = price + 50;
-                    }
-                    else {
-                        deal.price = -1;
+                case 8:
+                    if(part && part.indexOf('AQP')>-1) {
+                        src_dest = part.match(/((AQP)\d+)/gm);
+                        if(src_dest!==null && src_dest!==undefined && src_dest.length>0) {
+                            //console.log(src_dest[0].replace('AQP','').trim());
+                            let price = parseFloat(src_dest[0].replace('AQP','').trim());
+                
+                            deal.price = price; // + 50;
+                        }
+                        else {
+                            deal.price = -1;
+                        }
                     }
                     break;
                 default:
@@ -516,7 +530,7 @@ module.exports = {
                             selector: '#user_txt',
                             checkcontent: '',
                             type: 'textbox',
-                            value: '9800412356',
+                            value: '9593012356',
                             action: 'keyed',
                             checkselector: ''
                         },
@@ -526,7 +540,7 @@ module.exports = {
                             selector: '#pwd_txt',
                             checkcontent: '',
                             type: 'textbox',
-                            value: 'Sumit@12356',
+                            value: '890786',
                             action: 'keyed',
                             checkselector: ''
                         },

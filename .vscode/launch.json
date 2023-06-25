@@ -21,7 +21,7 @@
             "request": "launch",
             "name": "Launch airiq Program",
             "program": "${workspaceFolder}/indexairiq.js"
-        },
+        },     
         {
             "type": "node",
             "request": "launch",

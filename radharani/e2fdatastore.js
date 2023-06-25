@@ -389,6 +389,9 @@ function saveCircleBatchData(runid, circleData, circleKey, callback) {
                         saveMissingCity(con, missingCity, async function(updatedCities) {
                             cities = updatedCities;
                             let circleDataList = transformCircleData(con, circleData, cities);
+                            //console.log(`Data list => ${JSON.stringify(circleDataList)}`);
+                            let availableDates = getAvailableDates(circleDataList);
+                            await updateAvailableSectors(con, availableDates, runid);
                             await saveTicketsData(con, circleDataList, runid, function(status) {
                                 //con.release();
                                 // if(callback)
@@ -411,6 +414,133 @@ function saveCircleBatchData(runid, circleData, circleKey, callback) {
     });
 
     return impactedRecCount;
+}
+
+function getAvailableDates(circleDataList) {
+    console.log(`Data list => ${JSON.stringify(circleDataList[0])}`);
+    var availableDates = [];
+    var dummyObj = {};
+
+    for (let index = 0; index < circleDataList.length; index++) {
+        const circleDataItem = circleDataList[index];
+        if(circleDataItem) {
+            let key = `e2f_${circleDataItem.departure.id}_${circleDataItem.arrival.id}`;
+            let availableDate = {};
+            
+            if(!dummyObj.hasOwnProperty(key)) {
+                availableDate.id = circleDataItem.recid;
+                availableDate.sector = `${circleDataItem.departure.city} // ${circleDataItem.arrival.city}`;
+                availableDate.source = circleDataItem.departure.city;
+                availableDate.destination = circleDataItem.arrival.city;
+                availableDate.sourceCityCode = circleDataItem.departure.code;
+                availableDate.sourceCityId = circleDataItem.departure.id;
+                availableDate.destinationCityCode = circleDataItem.arrival.code;
+                availableDate.destinationCityId = circleDataItem.arrival.id;
+                availableDate.availableDates = [moment(circleDataItem.departure.date, 'DD-MMM-YYYY').format('MM/DD/YYYY')];
+                dummyObj[key] = availableDate;
+            }
+            else {
+                availableDate = dummyObj[key];
+                let dateAlreadyAvailable = false;
+                let newDate = moment(circleDataItem.departure.date, 'DD-MMM-YYYY').format('MM/DD/YYYY');
+                for (let index = 0; index < availableDate.availableDates.length; index++) {
+                    const avlDate = availableDate.availableDates[index];
+                    if(avlDate == newDate) {
+                        dateAlreadyAvailable = true
+                        break;
+                    }
+                }
+                if(!dateAlreadyAvailable) {
+                    availableDate.availableDates.push(newDate);
+                }
+            }
+
+            availableDates.push(availableDate);
+        }
+    }
+
+    console.log(`Available Dates : ${JSON.stringify(availableDates)}`);
+
+    return availableDates;
+}
+
+async function updateAvailableSectors(con, availableSectors, runid) {
+    if(!availableSectors || availableSectors.length == 0) return null;
+    let updatedSector = null;
+    let self = this;
+
+    for (let index = 0; index < availableSectors.length; index++) {
+        let sector = availableSectors[index];
+        
+        if(sector && sector.availableDates && sector.availableDates.length>=0) {
+            updatedSector = await updateAvailableSector(con, sector, runid);
+        }
+    }
+
+    return availableSectors;
+}
+
+async function updateAvailableSector(conn, sector, runid) {
+    let currentDate = moment.utc(new Date().toGMTString()).format("YYYY-MM-DD HH:mm:ss"); //moment(new Date()).format("YYYY-MM-DD HH:mm");
+    let self = this;
+    return new Promise((resolve, reject) => {
+        var qrySql = `select id from inventory_availability where provider='e2f' and source_city_id=${sector.sourceCityId} and destination_city_id=${sector.destinationCityId}`;
+        conn.query(qrySql, async function (err, data) {
+            if(err) {
+                console.log(err);
+                reject(err);
+            }
+            let insertStatus = {};
+            let sectorRecord = (data && data.length>0) ? data[0] : null;
+            let resultdata = null;
+    
+            if(sector.availableDates && sector.availableDates.length>=0) {
+                if(sectorRecord && sectorRecord.id>0) {
+                    var updateSql = `update inventory_availability set available_dates='${sector.availableDates.join(',')}', record_id='${sector.id}', runid='${runid}', updated_by=${DEFAULT_USER_ID}, 
+                            updated_on='${currentDate}' where provider='e2f' and id=${sectorRecord.id}`;
+        
+                    console.log(updateSql);
+                    resultdata = await updateData2DB(conn, updateSql, sectorRecord, sector);
+                }
+                else {
+                    var insertSql = `INSERT INTO inventory_availability (provider, sector, source_city, destination_city, source_city_id, destination_city_id, source_city_code, destination_city_code, 
+                        available_dates, record_id, runid, created_by) 
+                        VALUES ('e2f', '${sector.sector}', '${sector.source}', '${sector.destination}', ${sector.sourceCityId}, ${sector.destinationCityId}, '${sector.sourceCityCode}', '${sector.destinationCityCode}', 
+                        '${sector.availableDates.join(',')}', '${sector.id}', '${runid}', ${DEFAULT_USER_ID})`;
+
+                    console.log(insertSql);
+                    resultdata = await updateData2DB(conn, insertSql, sectorRecord, sector);
+                }
+            }
+            else {
+                reject('No available dates present. Ignoring operation');
+            }
+
+            resolve(sector);
+        });
+    });
+}
+
+async function updateData2DB(conn, updateSql, sectorRecord, sector) {
+    return new Promise((resolve, reject) => {
+        conn.query(updateSql, function (err, data) {
+            if (err) {
+                log('error', err);
+
+                reject(err);
+            }
+            else {
+                insertStatus = data;
+                if(insertStatus.insertId) {
+                    sector.iid = insertStatus.insertId;
+                }
+                else {
+                    sector.iid = sectorRecord.id;
+                }
+                resolve(sector);
+            }
+        });
+    });
 }
 
 function saveTicketsData(conn, circleDataList, runid, callback) {
@@ -835,6 +965,8 @@ function transformCircleData(conn, circleData, cities) {
         }
         if(deptCity!==null && deptCity!==undefined) {
             ticket.departure.circle = `${ticket.departure.circle} (${deptCity.code})`;
+            ticket.departure.city = `${ticket.departure.circle}`;
+            ticket.departure.code = `${deptCity.code}`;
             ticket.departure.id = deptCity.id;
         }
         else {
@@ -868,6 +1000,8 @@ function transformCircleData(conn, circleData, cities) {
         
         if(arrvCity!==null && arrvCity!==undefined) {
             ticket.arrival.circle = `${ticket.arrival.circle} (${arrvCity.code})`;
+            ticket.arrival.city = `${ticket.arrival.circle}`;
+            ticket.arrival.code = `${arrvCity.code}`;
             ticket.arrival.id = arrvCity.id;
         }
         else {
