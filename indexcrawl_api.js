@@ -15,6 +15,7 @@ const airtbCrawlCommonLib = require('./airtb_crawl');
 //const airiqCrawlCommonLib = require('./airiqV2_crawl');
 
 const airiqController = require('./airiq-controller');
+const gfsController = require('./goflysmart-controller');
 
 // const winston = require('winston');
 // const {combine, timestamp, label, printf} = winston.format;
@@ -461,7 +462,8 @@ router.get('/airasia/:pnr/:email', async function(req, res, next) {
 
 //configure AirIQ routes
 airiqController.init(router);
-
+//configure GFS routes
+//gfsController.init(router);
 //common code
 app.use('/api/crawl', router)
 

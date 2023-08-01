@@ -443,7 +443,8 @@ async function ProcessActivity(targetUri, runid=uuid5(), context) {
                     while(i<loopCount) {
                         let repeatsourceDataValue = (repeatsourceType==='array')?repeatsourceData[i]:'NA';
 
-                        let src_dest = repeatsourceDataValue.match(/\w+/gi);
+                        //let src_dest = repeatsourceDataValue.match(/\w+/gi);
+                        let src_dest = repeatsourceDataValue.split('//');
                         let key = '';
                         if(src_dest!==null && src_dest.length>1) {
                             key = (src_dest[0].trim() + '_' + src_dest[1].trim());

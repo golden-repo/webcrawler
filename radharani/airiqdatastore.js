@@ -37,17 +37,17 @@ function getDBPool() {
     // });
 
     //Local DB
-    pool = mysql.createPool({
-        connectionLimit : 2,
-        connectTimeout  : 60 * 60 * 1000,
-        acquireTimeout  : 60 * 60 * 1000,
-        timeout         : 60 * 60 * 1000,        
-        host: "localhost",
-        user: "root",
-        password: "",
-        database: "oxytra",
-        port: 3306
-    });
+    // pool = mysql.createPool({
+    //     connectionLimit : 2,
+    //     connectTimeout  : 60 * 60 * 1000,
+    //     acquireTimeout  : 60 * 60 * 1000,
+    //     timeout         : 60 * 60 * 1000,        
+    //     host: "localhost",
+    //     user: "root",
+    //     password: "",
+    //     database: "oxytra",
+    //     port: 3306
+    // });
     
     // //Remote DB
     // pool = mysql.createPool({
@@ -61,15 +61,15 @@ function getDBPool() {
     // });
 
     //New production
-    // pool = mysql.createPool({
-    //     connectionLimit: 2,
-    //     connectTimeout: 15000,
-    //     host: "www.oxytra.com",
-    //     user: "linoceuser",
-    //     password: "l1n0ceUser@2023",
-    //     database: "oxytra",
-    //     port: 3306
-    // });   
+    pool = mysql.createPool({
+        connectionLimit: 2,
+        connectTimeout: 15000,
+        host: "www.oxytra.com",
+        user: "linoceuser",
+        password: "l1n0ceUser@2023",
+        database: "oxytra",
+        port: 3306
+    });   
 
     return pool;
 }
@@ -786,7 +786,7 @@ function getMissingCities(conn, cities, circleData) {
                 //return data.city.toLowerCase().indexOf(city)===-1;
                 var flag = false;
                 // flag = data.city.toLowerCase().indexOf(city)>-1 || (data.code !== '' && data.code.trim().toLowerCase() === city);
-                flag = data.city.toLowerCase().startsWith(city) || (data.code !== '' && data.code.trim().toLowerCase() === city);
+                flag = (data.airiq_code.toLowerCase() == city) || (data.code !== '' && data.code.trim().toLowerCase() === city) || (data.city.toLowerCase().startsWith(city));
                 
                 if(!flag) {
                     //now check synonyms
@@ -819,7 +819,9 @@ function getMissingCities(conn, cities, circleData) {
                 //return data.city.toLowerCase().indexOf(city)>-1 || (data.code !== '' && data.code.trim().toLowerCase() === city);
                 
                 //var flag = data.city.toLowerCase().indexOf(city)>-1 || (data.code !== '' && data.code.trim().toLowerCase() === city);
-                flag = data.city.toLowerCase().startsWith(city) || (data.code !== '' && data.code.trim().toLowerCase() === city);
+                //flag = data.city.toLowerCase().startsWith(city) || (data.code !== '' && data.code.trim().toLowerCase() === city);
+                flag = (data.airiq_code.toLowerCase() == city) || (data.code !== '' && data.code.trim().toLowerCase() === city) || (data.city.toLowerCase().startsWith(city));
+
                 if(!flag) {
                     //now check synonyms
                     var synonyms = data.synonyms ? data.synonyms.trim().toLowerCase().split(',') : [];
@@ -972,7 +974,8 @@ function transformCircleData(conn, circleData, cities) {
             deptCity = cities.find((data, ndx)=> {
                 var flag = false;
                 // flag = data.city.toLowerCase().indexOf(city)>-1 || (data.code !== '' && data.code.trim().toLowerCase() === city);
-                flag = data.city.toLowerCase().startsWith(deptCityName) || (data.code !== '' && data.code.trim().toLowerCase() === deptCityName);
+                //flag = data.city.toLowerCase().startsWith(deptCityName) || (data.code !== '' && data.code.trim().toLowerCase() === deptCityName);
+                flag = (data.airiq_code.toLowerCase() == deptCityName) || (data.code !== '' && data.code.trim().toLowerCase() === deptCityName) || (data.city.toLowerCase().startsWith(deptCityName));
                 
                 if(!flag) {
                     //now check synonyms
@@ -1005,7 +1008,8 @@ function transformCircleData(conn, circleData, cities) {
                 // return city.city.toLowerCase().indexOf(arrvCityName)>-1;
                 var flag = false;
                 // flag = data.city.toLowerCase().indexOf(city)>-1 || (data.code !== '' && data.code.trim().toLowerCase() === city);
-                flag = data.city.toLowerCase().startsWith(arrvCityName) || (data.code !== '' && data.code.trim().toLowerCase() === arrvCityName);
+                //flag = data.city.toLowerCase().startsWith(arrvCityName) || (data.code !== '' && data.code.trim().toLowerCase() === arrvCityName);
+                flag = (data.airiq_code.toLowerCase() == arrvCityName) || (data.code !== '' && data.code.trim().toLowerCase() === arrvCityName) || (data.city.toLowerCase().startsWith(arrvCityName));
                 
                 if(!flag) {
                     //now check synonyms

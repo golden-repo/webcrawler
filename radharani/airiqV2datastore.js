@@ -139,7 +139,7 @@ function matchCityDetails(cities, sectorCityName) {
         //capture source city details
         if(city.code.toLowerCase() == sectorCityName || 
             airiq_code == sectorCityName || 
-            sectorCityName.toLowerCase().indexOf(airiq_code)>-1 || 
+            //sectorCityName.toLowerCase().indexOf(airiq_code)>-1 || 
             city.city.toLowerCase().indexOf(sectorCityName)>-1 || 
             (city.synonyms && city.synonyms.toLowerCase().indexOf(sectorCityName)>-1)) {
             return city;

@@ -11,28 +11,60 @@
 			"actions": [
 				{
 					"name": "index",
-					"codefile": "./cx_airiqV2_runbook.js",
+					"codefile": "./cx_gfs_runbook.js",
 					"properties": [],
 					"tasks": [
 						{
 							"id": 1,
-							"name": "set_user_input",
+							"name": "get_token",
 							"parameters": [
-								{"id": 1, "name": "selector", "value": "#user_txt", "sourcetype": "value", "direction": "input"},
-								{"id": 2, "name": "value", "value": "9593012356", "sourcetype": "value", "direction": "input"},
-								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
+								{"id": 1, "name": "url", "value": "https://goflysmartapi.azurewebsites.net/api/login", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "method", "value": "post", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "email", "value": "9382207002", "sourcetype": "value", "direction": "input"},
+								{"id": 4, "name": "password", "value": "Sumit@12356", "sourcetype": "value", "direction": "input"},
+								{"id": 5, "name": "token", "value": "${token}", "sourcetype": "variable", "direction": "output"}
 							],
 							"connects": [
-								{"id": 1, "name": "connect1", "expression": "${status} === true", "taskid": 2},
-								{"id": 2, "name": "connect2", "expression": "${status} === false", "taskid": 99}
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 2},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 99}
 							]
-						},						
+						},
 						{
 							"id": 2,
+							"name": "call_api",
+							"parameters": [
+								{"id": 1, "name": "url", "value": "https://goflysmartapi.azurewebsites.net/api/destinations", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "method", "value": "get", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "token", "value": "${token}", "sourcetype": "variable", "direction": "input"},
+								{"id": 4, "name": "content_type", "value": "json", "sourcetype": "value", "direction": "input"},
+								{"id": 5, "name": "availableSectors", "value": "${availableSectors}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 99},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 3,
+							"name": "transform_sector_data",
+							"parameters": [
+								{"id": 1, "name": "url", "value": "https://goflysmartapi.azurewebsites.net/api/destinations", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "method", "value": "get", "sourcetype": "value", "direction": "input"},
+								{"id": 3, "name": "token", "value": "${token}", "sourcetype": "variable", "direction": "input"},
+								{"id": 4, "name": "content_type", "value": "json", "sourcetype": "value", "direction": "input"},
+								{"id": 5, "name": "availableSectors", "value": "${availableSectors}", "sourcetype": "variable", "direction": "output"}
+							],
+							"connects": [
+								{"id": 1, "name": "connect1", "expression": "${result} === true", "taskid": 99},
+								{"id": 2, "name": "connect2", "expression": "${result} === false", "taskid": 99}
+							]
+						},
+						{
+							"id": 5,
 							"name": "set_user_input",
 							"parameters": [
 								{"id": 1, "name": "selector", "value": "#pwd_txt", "sourcetype": "value", "direction": "input"},
-								{"id": 2, "name": "value", "value": "890786", "sourcetype": "value", "direction": "input"},
+								{"id": 2, "name": "value", "value": "Sumit@12356", "sourcetype": "value", "direction": "input"},
 								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
 							],
 							"connects": [
@@ -41,7 +73,7 @@
 							]
 						},
 						{
-							"id": 3,
+							"id": 6,
 							"name": "click_button",
 							"parameters": [
 								{"id": 1, "name": "selector", "value": "#LinkButton1", "sourcetype": "value", "direction": "input"},
@@ -54,7 +86,7 @@
 							]
 						},
 						{
-							"id": 4,
+							"id": 7,
 							"name": "element_present",
 							"parameters": [
 								{"id": 1, "name": "selector", "value": "#select2-dest_cmd-container", "sourcetype": "value", "direction": "input"},
