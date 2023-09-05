@@ -1011,22 +1011,28 @@ class CheapPortal_Crawl {
         var selector = `${this.input_parameters.selector} option`;
         var timeout = this.input_parameters.timeout;
 
+        let elements = await this.page.$$(selector);
+
+        //this.page.on('console', msg => console.log(msg.text()));        
+
         content = await this.page.evaluate((sel) => {
-            console.log(`Selector -> ${sel}`);
+            //console.log(`Selector -> ${sel}`);
             return Array.from(document.querySelectorAll(sel)).map(element=> {
                 //console.log(JSON.stringify(element));
                 let sectorValue = element.text;
                 let source = null;
                 let destination = null;
 
-                if(element.value == "Select Sector") {
+                //console.log(`element text -> ${element.text}`);
+                //console.log(`element value -> ${element.value == undefined}`);
+                if(sectorValue == "Select Sector") {
                     return null;
                 }
                 else {
-                    if(element.text.trim().split('//').length>0) {
-                        source = element.text.trim().split('//')[0].trim();
-                        destination = element.text.trim().split('//')[1].trim();
-                        return {'id': parseInt(element.value, 10), 'sector': element.text, 'source': source, 'destination': destination};
+                    if(element !== undefined && sectorValue !== undefined && sectorValue.trim().split('//').length>0) {
+                        source = sectorValue.trim().split('//')[0].trim();
+                        destination = sectorValue.trim().split('//')[1].trim();
+                        return {'id': parseInt(element.value, 10), 'sector': sectorValue, 'source': source, 'destination': destination};
                     }
                     else {
                         return null;
@@ -1108,7 +1114,7 @@ class CheapPortal_Crawl {
                             scriptContent = element.textContent;
 
                             if(scriptContent.indexOf('var eventDates = {}')>-1) {
-                                console.log(`My script => ${scriptContent}`);
+                                //console.log(`My script => ${scriptContent}`);
 
                                 var regex = new RegExp(/\w[0-9\/]+/, 'gm');                                
                                 let dates = scriptContent.match(regex);

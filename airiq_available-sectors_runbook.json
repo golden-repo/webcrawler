@@ -152,7 +152,7 @@
 							"name": "element_present",
 							"parameters": [
 								{"id": 1, "name": "selector", "value": "#dest_cmd", "sourcetype": "value", "direction": "input"},
-								{"id": 1, "name": "timeout", "value": "1500", "sourcetype": "value", "direction": "input"},
+								{"id": 1, "name": "timeout", "value": "2500", "sourcetype": "value", "direction": "input"},
 								{"id": 3, "name": "status", "value": "${result}", "sourcetype": "variable", "direction": "output"}
 							],
 							"connects": [
